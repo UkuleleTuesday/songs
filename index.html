@@ -3,53 +3,93 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ukulele Tuesday – Song Sheets</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Browse and search all Ukulele Tuesday song sheets. Free ukulele chord sheets from Dublin's favourite ukulele club.">
+  <meta name="keywords" content="ukulele, song sheets, ukulele tuesday, dublin, music, chords">
+  <meta name="author" content="Ukulele Tuesday">
+  <meta name="robots" content="index, follow">
+
+  <!-- Social Media Meta Tags -->
+  <meta property="og:title" content="Ukulele Tuesday – Song Sheets">
+  <meta property="og:description" content="Browse and search all Ukulele Tuesday song sheets. Free ukulele chord sheets from Dublin's favourite ukulele club.">
+  <meta property="og:image" content="https://songbooks.ukuleletuesday.ie/assets/uke-closeup.jpeg">
+  <meta property="og:url" content="https://ukuleletuesday.github.io/songs/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ukulele Tuesday – Song Sheets">
+  <meta name="twitter:description" content="Browse and search all Ukulele Tuesday song sheets. Free ukulele chord sheets from Dublin's favourite ukulele club.">
+  <meta name="twitter:image" content="https://songbooks.ukuleletuesday.ie/assets/uke-closeup.jpeg">
+
+  <link rel="icon" href="https://songbooks.ukuleletuesday.ie/assets/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lunr@2.3.9/lunr.js"></script>
   <style>
     :root {
-      --primary: #2e7d32;
-      --primary-light: #4caf50;
-      --bg: #f5f5f5;
+      --primary: #0f8b81;
+      --primary-light: #1db1ad;
+      --bg: #fdfdfd;
       --card-bg: #ffffff;
-      --text: #212121;
+      --text: #333;
       --text-muted: #757575;
       --border: #e0e0e0;
       --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
-      --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
+      --shadow-hover: 0 8px 20px rgba(0,0,0,0.08);
       --radius: 8px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      margin: 0;
+      padding: 2em 1em;
+      line-height: 1.6;
+      font-size: 16px;
     }
 
     header {
-      background: var(--primary);
-      color: white;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      text-align: center;
+      margin-bottom: 2em;
+      padding: 1em;
+      background-color: var(--primary);
+      color: #fff;
+      border-radius: var(--radius);
     }
 
-    header h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.3px; }
+    h1 {
+      font-family: 'Pattaya', sans-serif;
+      font-weight: normal;
+      font-size: 3em;
+    }
+
+    header h1 {
+      margin-bottom: 0;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    header h2 {
+      font-size: 1.2em;
+      font-weight: normal;
+      color: rgba(255, 255, 255, 0.85);
+      margin-top: 0.5em;
+    }
 
     header .header-count {
       font-size: 0.85rem;
       opacity: 0.85;
-      margin-left: auto;
       white-space: nowrap;
     }
 
     .container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 24px 16px;
     }
 
     /* ── Controls ── */
@@ -146,25 +186,6 @@
     .stats-bar .count { font-size: 0.9rem; color: var(--text-muted); }
     .stats-bar .count strong { color: var(--text); }
 
-    .view-toggle { display: flex; gap: 4px; }
-
-    .view-toggle button {
-      padding: 5px 10px;
-      border: 1px solid var(--border);
-      background: white;
-      cursor: pointer;
-      border-radius: var(--radius);
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      transition: all 0.15s;
-    }
-
-    .view-toggle button.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-
     /* ── Loading / Error ── */
     #loading, #error {
       text-align: center;
@@ -187,20 +208,14 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Grid / List containers ── */
-    #results.grid {
+    /* ── Grid container ── */
+    #results {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 16px;
     }
 
-    #results.list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    /* ── Song Card (shared) ── */
+    /* ── Song Card ── */
     .card {
       background: var(--card-bg);
       border-radius: var(--radius);
@@ -210,11 +225,12 @@
       text-decoration: none;
       color: inherit;
       display: block;
+      border: 1px solid #eee;
     }
 
     .card:hover {
       box-shadow: var(--shadow-hover);
-      transform: translateY(-2px);
+      transform: translateY(-5px);
     }
 
     /* Grid card */
@@ -256,27 +272,6 @@
       gap: 5px;
     }
 
-    /* List card */
-    #results.list .card-accent { display: none; }
-
-    #results.list .card-body {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 10px 16px;
-    }
-
-    #results.list .card-left { flex: 1; min-width: 0; }
-
-    #results.list .card-title { font-size: 0.9rem; margin-bottom: 2px; }
-    #results.list .card-artist { margin-bottom: 0; }
-    #results.list .card-chords { display: none; }
-
-    #results.list .card-chips {
-      flex-shrink: 0;
-      flex-wrap: nowrap;
-    }
-
     /* ── Chips ── */
     .chip {
       display: inline-block;
@@ -308,40 +303,75 @@
 
     /* ── Footer ── */
     footer {
+      margin-top: 2em;
+      padding: 1.5em 1em;
+      background-color: var(--primary);
+      color: #fff;
       text-align: center;
-      padding: 24px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      border-top: 1px solid var(--border);
-      margin-top: 40px;
+      border-radius: var(--radius);
     }
 
-    footer a { color: var(--primary); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+    footer .logo {
+      height: 60px;
+    }
+
+    footer .description,
+    footer .disclaimer,
+    footer .more-links {
+      font-size: 0.9em;
+      margin: 1.5em auto;
+      padding: 0 1em;
+      opacity: 0.9;
+      line-height: 1.5;
+    }
+
+    footer .disclaimer a,
+    footer .more-links a {
+      color: #fff;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+
+    footer .disclaimer a:hover,
+    footer .more-links a:hover {
+      text-decoration: none;
+    }
+
+    footer .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5em;
+      margin-top: 1em;
+    }
+
+    footer .social-links a {
+      color: #fff;
+      transition: opacity 0.2s;
+    }
+
+    footer .social-links a:hover {
+      opacity: 0.8;
+    }
+
+    footer .social-links svg {
+      width: 28px;
+      height: 28px;
+    }
 
     @media (max-width: 600px) {
-      header { flex-wrap: wrap; }
-      header .header-count { margin-left: 0; width: 100%; }
-      #results.grid { grid-template-columns: 1fr; }
-      #results.list .chip-neutral { display: none; }
+      #results { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
+<div class="container">
+
 <header>
-  <!-- Ukulele icon -->
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"
-       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <circle cx="9" cy="15" r="4"/>
-    <path d="M13 11l6-6"/>
-    <path d="M17 5l2 2"/>
-  </svg>
   <h1>Ukulele Tuesday – Song Sheets</h1>
+  <h2>Browse and search our collection of song sheets</h2>
   <span class="header-count" id="header-count"></span>
 </header>
-
-<div class="container">
 
   <div class="controls">
     <!-- Search -->
@@ -414,10 +444,6 @@
 
   <div class="stats-bar">
     <span class="count" id="result-count"></span>
-    <div class="view-toggle" role="group" aria-label="View mode">
-      <button id="view-grid" class="active" aria-pressed="true" title="Grid view">⊞ Grid</button>
-      <button id="view-list" aria-pressed="false" title="List view">☰ List</button>
-    </div>
   </div>
 
   <div id="loading">
@@ -427,21 +453,34 @@
 
   <div id="error" hidden role="alert"></div>
 
-  <div id="results" class="grid" role="list" aria-label="Song sheets"></div>
+  <div id="results" role="list" aria-label="Song sheets"></div>
+
+  <footer>
+    <img src="https://songbooks.ukuleletuesday.ie/assets/ut-logo.png" alt="Ukulele Tuesday Logo" class="logo">
+    <p class="description">Ukulele Tuesday is a free Ukulele club and meetup. We meet every Tuesday at the Stag's Head, Dublin, Ireland. Find more info on our socials and websites below.</p>
+    <p class="disclaimer">
+      We claim no copyright on any of the songs in these song sheets (except our own). If someone has charged you for access to our content, please <a href="https://www.ukuleletuesday.ie/contact-us/" target="_blank" rel="noopener noreferrer">contact us</a>.
+    </p>
+    <div class="social-links">
+      <a href="https://www.instagram.com/ukuleletuesday/" target="_blank" rel="noopener noreferrer" title="Instagram">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+      </a>
+      <a href="https://www.youtube.com/@UkuleleTuesday" target="_blank" rel="noopener noreferrer" title="YouTube">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+      </a>
+      <a href="https://ukuleletuesday.ie/" target="_blank" rel="noopener noreferrer" title="Website">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+      </a>
+    </div>
+  </footer>
 
 </div>
-
-<footer>
-  Data sourced from <a href="https://www.ukuleletuesday.ie/" target="_blank" rel="noopener">Ukulele Tuesday</a>.
-  Search powered by <a href="https://lunrjs.com/" target="_blank" rel="noopener">lunr.js</a>.
-</footer>
 
 <script>
   const DATA_URL = "./data.jsonl";
 
   let allSongs  = [];
   let lunrIndex = null;
-  let currentView = "grid";
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -595,7 +634,7 @@
 
   // ── Rendering ────────────────────────────────────────────────────────────────
 
-  function renderCard(song, isGrid) {
+  function renderCard(song) {
     const p      = song.properties || {};
     const band   = difficultyBand(p.difficulty);
     const url    = songUrl(song.id);
@@ -621,28 +660,14 @@
       ? `<div class="card-chords" title="${escHtml(p.chords)}">${escHtml(p.chords)}</div>`
       : "";
 
-    if (isGrid) {
-      return `
-        <a class="card" href="${url}" target="_blank" rel="noopener noreferrer"
-           role="listitem" aria-label="Open song sheet: ${title} by ${artist}">
-          <div class="card-accent accent-${p.status || "default"}"></div>
-          <div class="card-body">
-            <div class="card-title">${title}</div>
-            <div class="card-artist">${artist}</div>
-            ${chordsHtml}
-            <div class="card-chips">${chips}</div>
-          </div>
-        </a>`;
-    }
-
     return `
       <a class="card" href="${url}" target="_blank" rel="noopener noreferrer"
          role="listitem" aria-label="Open song sheet: ${title} by ${artist}">
+        <div class="card-accent accent-${p.status || "default"}"></div>
         <div class="card-body">
-          <div class="card-left">
-            <div class="card-title">${title}</div>
-            <div class="card-artist">${artist}</div>
-          </div>
+          <div class="card-title">${title}</div>
+          <div class="card-artist">${artist}</div>
+          ${chordsHtml}
           <div class="card-chips">${chips}</div>
         </div>
       </a>`;
@@ -651,7 +676,6 @@
   function render() {
     const filters  = getFilters();
     const filtered = applyFilters(allSongs, filters);
-    const isGrid   = currentView === "grid";
 
     document.getElementById("result-count").innerHTML =
       `Showing <strong>${filtered.length.toLocaleString()}</strong> of
@@ -661,7 +685,7 @@
     if (filtered.length === 0) {
       container.innerHTML = '<div class="no-results">No songs match your search. Try different terms or clear the filters.</div>';
     } else {
-      container.innerHTML = filtered.map(s => renderCard(s, isGrid)).join("");
+      container.innerHTML = filtered.map(s => renderCard(s)).join("");
     }
   }
 
@@ -712,19 +736,6 @@
     document.getElementById("filter-book").value     = "";
     render();
   });
-
-  function setView(mode) {
-    currentView = mode;
-    const isGrid = mode === "grid";
-    document.getElementById("results").className    = mode;
-    document.getElementById("view-grid").classList.toggle("active", isGrid);
-    document.getElementById("view-list").classList.toggle("active", !isGrid);
-    document.getElementById("view-grid").setAttribute("aria-pressed", String(isGrid));
-    document.getElementById("view-list").setAttribute("aria-pressed", String(!isGrid));
-  }
-
-  document.getElementById("view-grid").addEventListener("click", () => setView("grid"));
-  document.getElementById("view-list").addEventListener("click", () => setView("list"));
 
   init();
 </script>

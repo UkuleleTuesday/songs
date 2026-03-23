@@ -1,0 +1,6 @@
+node_modules/
+.pnpm-store/
+pnpm-lock.yaml
+data.jsonl
+sheets/
+.DS_Store

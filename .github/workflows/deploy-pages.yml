@@ -34,8 +34,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download song-sheets dataset
-        run: curl -fsSL "https://ukulele-tuesday-datasets.storage.googleapis.com/song-sheets/aggregated/latest/data.jsonl" -o data.jsonl
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Build (download data + generate sheets)
+        run: pnpm build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

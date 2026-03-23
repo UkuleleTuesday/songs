@@ -54,24 +54,39 @@
     }
 
     header {
-      text-align: center;
       margin-bottom: 2em;
-      padding: 1em;
+      padding: 1.2em 1.5em;
       background-color: var(--primary);
       color: #fff;
       border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      gap: 1.5em;
     }
 
-    h1 {
-      font-family: 'Pattaya', sans-serif;
-      font-weight: normal;
-      font-size: 3em;
+    .header-logo {
+      max-width: 220px;
+      height: auto;
+      flex-shrink: 0;
+    }
+
+    .header-text {
+      flex: 1;
     }
 
     header h1 {
-      margin-bottom: 0;
+      font-size: 1.8em;
+      font-weight: 600;
+      margin: 0;
       color: #fff;
       line-height: 1.2;
+    }
+
+    .header-tagline {
+      font-size: 0.9em;
+      color: rgba(255, 255, 255, 0.85);
+      margin: 0.3em 0 0 0;
+      line-height: 1.4;
     }
 
     header h2 {
@@ -233,6 +248,40 @@
       transform: translateY(-5px);
     }
 
+    .card-share {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+    }
+
+    .card-icons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      padding: 6px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-btn:hover {
+      background: #f5f5f5;
+      border-color: #999;
+    }
+
+    .icon-btn svg {
+      width: 16px;
+      height: 16px;
+      color: #333;
+    }
+
     /* Grid card */
     .card-accent { height: 3px; }
     .accent-APPROVED     { background: #4caf50; }
@@ -359,6 +408,21 @@
     }
 
     @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.8em;
+      }
+
+      .header-logo {
+        max-width: 140px;
+      }
+
+      header h1 {
+        font-size: 1.4em;
+      }
+
       #results { grid-template-columns: 1fr; }
     }
   </style>
@@ -368,9 +432,11 @@
 <div class="container">
 
 <header>
-  <h1>Ukulele Tuesday – Song Sheets</h1>
-  <h2>Browse and search our collection of song sheets</h2>
-  <span class="header-count" id="header-count"></span>
+  <img src="./ut-logo-wordmark.svg" alt="Ukulele Tuesday" class="header-logo">
+  <div class="header-text">
+    <h1>Song Explorer</h1>
+    <p class="header-tagline">Browse <span id="header-count-inline"></span> ukulele songs</p>
+  </div>
 </header>
 
   <div class="controls">
@@ -385,18 +451,6 @@
              aria-label="Search song sheets" />
     </div>
 
-    <!-- Status filter -->
-    <div class="filter-group">
-      <label for="filter-status">Status</label>
-      <select id="filter-status" aria-label="Filter by status">
-        <option value="">All statuses</option>
-        <option value="APPROVED">Approved</option>
-        <option value="READY_TO_PLAY">Ready to play</option>
-        <option value="DRAFT">Draft</option>
-        <option value="REJECTED">Rejected</option>
-      </select>
-    </div>
-
     <!-- Difficulty filter (calibrated to actual range: 0.81–5.03) -->
     <div class="filter-group">
       <label for="filter-difficulty">Difficulty</label>
@@ -405,19 +459,6 @@
         <option value="easy">Easy (≤ 2.0)</option>
         <option value="medium">Medium (2.0–3.5)</option>
         <option value="hard">Hard (&gt; 3.5)</option>
-      </select>
-    </div>
-
-    <!-- Artist type filter -->
-    <div class="filter-group">
-      <label for="filter-gender">Artist type</label>
-      <select id="filter-gender" aria-label="Filter by artist type">
-        <option value="">All types</option>
-        <option value="male">Male</option>
-        <option value="female">Female</option>
-        <option value="duet">Duet</option>
-        <option value="ensemble">Ensemble</option>
-        <option value="instrumental">Instrumental</option>
       </select>
     </div>
 
@@ -484,6 +525,19 @@
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
+  function slugify(text) {
+    if (!text) return 'unknown';
+    return text
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\s_]+/g, '-')
+      .replace(/[^\w-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 100);
+  }
+
   /**
    * Classify difficulty into easy / medium / hard based on the actual data range
    * (0.81 – 5.03, median ≈ 2.5, 75th pct ≈ 3.2, 90th pct ≈ 3.7).
@@ -504,9 +558,23 @@
     REJECTED:      "Rejected",
   };
 
-  /** Public PDF URL for a song sheet stored in the songbook-generator GCS cache. */
-  function songUrl(id) {
-    return `https://storage.googleapis.com/songbook-generator-cache-europe-west1/song-sheets/${encodeURIComponent(id)}.pdf`;
+  /** Generate friendly URL for a song sheet. */
+  function songUrl(song) {
+    const props = song.properties || {};
+    if (!props.song || !props.artist) return '#';
+
+    function slugify(text) {
+      return text
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .slice(0, 100);
+    }
+
+    const slug = `${slugify(props.song)}-${slugify(props.artist)}`;
+    return `./sheets/${slug}/`;
   }
 
   function escHtml(str) {
@@ -562,9 +630,7 @@
   function getFilters() {
     return {
       query:      document.getElementById("search").value.trim(),
-      status:     document.getElementById("filter-status").value,
       difficulty: document.getElementById("filter-difficulty").value,
-      gender:     document.getElementById("filter-gender").value,
       book:       document.getElementById("filter-book").value,
     };
   }
@@ -606,19 +672,11 @@
       result = result.filter(s => hitIds.has(s.id));
     }
 
-    if (filters.status) {
-      result = result.filter(s => (s.properties || {}).status === filters.status);
-    }
-
     if (filters.difficulty) {
       result = result.filter(s => {
         const band = difficultyBand((s.properties || {}).difficulty);
         return band === filters.difficulty;
       });
-    }
-
-    if (filters.gender) {
-      result = result.filter(s => (s.properties || {}).gender === filters.gender);
     }
 
     if (filters.book) {
@@ -637,7 +695,7 @@
   function renderCard(song) {
     const p      = song.properties || {};
     const band   = difficultyBand(p.difficulty);
-    const url    = songUrl(song.id);
+    const url    = songUrl(song);
     const title  = escHtml(p.song   || song.name || "Unknown title");
     const artist = escHtml(p.artist || "Unknown artist");
 
@@ -660,17 +718,39 @@
       ? `<div class="card-chords" title="${escHtml(p.chords)}">${escHtml(p.chords)}</div>`
       : "";
 
+    const shareUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}sheets/${slugify(p.song)}-${slugify(p.artist)}/`;
+
     return `
-      <a class="card" href="${url}" target="_blank" rel="noopener noreferrer"
-         role="listitem" aria-label="Open song sheet: ${title} by ${artist}">
-        <div class="card-accent accent-${p.status || "default"}"></div>
-        <div class="card-body">
-          <div class="card-title">${title}</div>
-          <div class="card-artist">${artist}</div>
-          ${chordsHtml}
-          <div class="card-chips">${chips}</div>
+      <div class="card" role="listitem" style="position: relative;">
+        <a href="${url}" target="_blank" rel="noopener noreferrer"
+           aria-label="Open song sheet: ${title} by ${artist}" style="text-decoration: none; color: inherit;">
+          <div class="card-accent accent-${p.status || "default"}"></div>
+          <div class="card-body">
+            <div class="card-title">${title}</div>
+            <div class="card-artist">${artist}</div>
+            ${chordsHtml}
+            <div class="card-chips">${chips}</div>
+          </div>
+        </a>
+        <div class="card-share card-icons">
+          <a href="${url}" target="_blank" rel="noopener noreferrer" class="icon-btn" title="Open PDF">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </a>
+          <button class="icon-btn" data-share-url="${shareUrl}" title="Copy share link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+          </button>
         </div>
-      </a>`;
+      </div>`;
   }
 
   function render() {
@@ -705,8 +785,8 @@
       lunrIndex = buildIndex(allSongs);
 
       document.getElementById("loading").hidden = true;
-      document.getElementById("header-count").textContent =
-        `${allSongs.length.toLocaleString()} songs`;
+      document.getElementById("header-count-inline").textContent =
+        allSongs.length.toLocaleString();
 
       render();
 
@@ -723,21 +803,32 @@
   // ── Event listeners ──────────────────────────────────────────────────────────
 
   document.getElementById("search").addEventListener("input", render);
-  document.getElementById("filter-status").addEventListener("change", render);
   document.getElementById("filter-difficulty").addEventListener("change", render);
-  document.getElementById("filter-gender").addEventListener("change", render);
   document.getElementById("filter-book").addEventListener("change", render);
 
   document.getElementById("btn-clear").addEventListener("click", () => {
     document.getElementById("search").value          = "";
-    document.getElementById("filter-status").value   = "";
     document.getElementById("filter-difficulty").value = "";
-    document.getElementById("filter-gender").value   = "";
     document.getElementById("filter-book").value     = "";
     render();
   });
 
   init();
+
+  // Icon button handler
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.icon-btn');
+    if (!btn) return;
+
+    const url = btn.dataset.shareUrl;
+    if (url) {
+      e.preventDefault();
+      e.stopPropagation();
+      navigator.clipboard.writeText(url);
+      btn.style.opacity = '0.5';
+      setTimeout(() => btn.style.opacity = '', 300);
+    }
+  });
 </script>
 </body>
 </html>

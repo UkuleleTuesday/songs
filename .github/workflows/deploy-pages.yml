@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "docs/**"
+      - "index.html"
   workflow_run:
     workflows:
       - "Synchronize Datasets"
@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download song-sheets dataset
-        run: curl -fsSL "https://ukulele-tuesday-datasets.storage.googleapis.com/song-sheets/aggregated/latest/data.jsonl" -o docs/data.jsonl
+        run: curl -fsSL "https://ukulele-tuesday-datasets.storage.googleapis.com/song-sheets/aggregated/latest/data.jsonl" -o data.jsonl
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -43,7 +43,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/
+          path: ./
 
       - name: Deploy to GitHub Pages
         id: deployment

@@ -161,6 +161,11 @@
     return `./sheets/${slug}/`;
   }
 
+  function pdfUrl(song) {
+    const songId = song.id || '';
+    return `https://storage.googleapis.com/songbook-generator-cache-europe-west1/song-sheets/${encodeURIComponent(songId)}.pdf`;
+  }
+
   function escHtml(str) {
     return String(str ?? "")
       .replace(/&/g, "&amp;")
@@ -185,6 +190,7 @@
     const p      = song.properties || {};
     const band   = difficultyBand(p.difficulty);
     const url    = songUrl(song);
+    const pdf    = pdfUrl(song);
     const title  = escHtml(p.song   || song.name || "Unknown title");
     const artist = escHtml(p.artist || "Unknown artist");
 
@@ -221,7 +227,7 @@
           </div>
         </a>
         <div class="card-share card-icons">
-          <a href="${url}" target="_blank" rel="noopener noreferrer" class="icon-btn" title="Open PDF">
+          <a href="${pdf}" target="_blank" rel="noopener noreferrer" class="icon-btn" title="Download PDF">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>

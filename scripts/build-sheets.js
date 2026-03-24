@@ -10,6 +10,10 @@ if (!fs.existsSync(sheetsDir)) {
   fs.mkdirSync(sheetsDir, { recursive: true });
 }
 
+// Load template
+const templatePath = path.join(__dirname, '../templates/song-page.html');
+const template = fs.readFileSync(templatePath, 'utf8');
+
 // Slug generator - matches client-side version
 function slugify(text) {
   if (!text) return 'unknown';
@@ -24,26 +28,23 @@ function slugify(text) {
     .slice(0, 100);
 }
 
-// Redirect template
-function redirectTemplate(songId) {
-  const encodedId = encodeURIComponent(songId);
-  const pdfUrl = `https://storage.googleapis.com/songbook-generator-cache-europe-west1/song-sheets/${encodedId}.pdf`;
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Redirecting...</title>
-  <script>
-    // Redirect to PDF while keeping friendly URL in browser
-    window.history.replaceState(null, '', window.location.href);
-    window.location.href = '${pdfUrl}';
-  </script>
-</head>
-<body>
-  <p>Redirecting to song sheet...</p>
-</body>
-</html>`;
+// HTML escape for safe embedding in attributes
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Render template with variables
+function renderTemplate(templateStr, vars) {
+  let result = templateStr;
+  Object.entries(vars).forEach(([key, value]) => {
+    result = result.replace(new RegExp(`{{${key}}}`, 'g'), value);
+  });
+  return result;
 }
 
 // Process data.jsonl
@@ -70,9 +71,23 @@ rl.on('line', (line) => {
       fs.mkdirSync(songDir, { recursive: true });
     }
 
-    // Write redirect HTML
+    // Prepare template variables
+    const encodedId = encodeURIComponent(song.id);
+    const pdfUrl = `https://storage.googleapis.com/songbook-generator-cache-europe-west1/song-sheets/${encodedId}.pdf`;
+    const title = `${props.song} – ${props.artist}`;
+    const description = `Ukulele chord sheet for "${props.song}" by ${props.artist}. Free chord sheet from Ukulele Tuesday.`;
+
+    const templateVars = {
+      TITLE: escapeHtml(title),
+      DESCRIPTION: escapeHtml(description),
+      PDF_URL: pdfUrl,
+      SLUG: slug,
+    };
+
+    // Render and write
+    const html = renderTemplate(template, templateVars);
     const indexPath = path.join(songDir, 'index.html');
-    fs.writeFileSync(indexPath, redirectTemplate(song.id));
+    fs.writeFileSync(indexPath, html);
 
     count++;
   } catch (err) {
@@ -81,7 +96,7 @@ rl.on('line', (line) => {
 });
 
 rl.on('close', () => {
-  console.log(`✓ Generated ${count} song sheet redirects in /sheets`);
+  console.log(`✓ Generated ${count} song pages in /sheets`);
 });
 
 rl.on('error', (err) => {

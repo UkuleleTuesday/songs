@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{TITLE}}</title>
+  <meta name="description" content="{{DESCRIPTION}}">
+
+  <!-- Social Media Meta Tags -->
+  <meta property="og:title" content="{{TITLE}}">
+  <meta property="og:description" content="{{DESCRIPTION}}">
+  <meta property="og:image" content="https://songbooks.ukuleletuesday.ie/assets/uke-closeup.jpeg">
+  <meta property="og:url" content="https://ukuleletuesday.github.io/songs/sheets/{{SLUG}}/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{TITLE}}">
+  <meta name="twitter:description" content="{{DESCRIPTION}}">
+  <meta name="twitter:image" content="https://songbooks.ukuleletuesday.ie/assets/uke-closeup.jpeg">
+
+  <link rel="icon" href="https://songbooks.ukuleletuesday.ie/assets/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css">
+  <style>
+    .song-header {
+      margin-bottom: 2em;
+      padding: 1.2em 1.5em;
+      background-color: var(--primary);
+      color: #fff;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      gap: 1.5em;
+    }
+
+    .song-header-title {
+      flex: 1;
+      min-width: 250px;
+      margin-right: auto;
+    }
+
+    .song-header h1 {
+      font-size: 1.8em;
+      font-weight: 600;
+      margin: 0;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 0.75em;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+
+    .btn-secondary {
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid #ddd;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #f5f5f5;
+      border-color: #999;
+    }
+
+    .pdf-container {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #eee;
+      margin-bottom: 2em;
+    }
+
+    embed {
+      width: 100%;
+      height: 1100px;
+      min-height: 1100px;
+    }
+
+    .pdf-fallback {
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      display: none;
+    }
+
+    .pdf-fallback.visible {
+      display: block;
+    }
+
+    .pdf-fallback p {
+      margin-bottom: 1rem;
+    }
+
+    .btn-icon {
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid #ddd;
+      color: #333;
+    }
+
+    .btn-icon:hover {
+      background: #f5f5f5;
+      border-color: #999;
+    }
+
+    .btn-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .song-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .song-header-title {
+        width: 100%;
+      }
+
+      .song-header h1 {
+        font-size: 1.5em;
+      }
+
+      embed {
+        height: 900px;
+        min-height: 900px;
+      }
+
+      .btn {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="song-header">
+      <a href="../../" class="btn btn-secondary" title="Back to songs">
+        ← Back
+      </a>
+      <div class="song-header-title">
+        <h1>{{TITLE}}</h1>
+      </div>
+      <div class="header-buttons">
+        <button class="btn btn-icon" id="share-btn" title="Share song">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+          Share
+        </button>
+        <a href="{{PDF_URL}}" target="_blank" rel="noopener noreferrer" class="btn btn-icon" title="Download PDF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Download
+        </a>
+      </div>
+    </div>
+
+    <div class="pdf-container">
+      <embed id="pdf-embed" src="{{PDF_URL}}" type="application/pdf" title="{{TITLE}}">
+      <div class="pdf-fallback" id="pdf-fallback">
+        <p>📄 PDF couldn't be displayed inline.</p>
+        <a href="{{PDF_URL}}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+          📥 Download PDF
+        </a>
+      </div>
+    </div>
+
+    <footer>
+      <img src="https://songbooks.ukuleletuesday.ie/assets/ut-logo.png" alt="Ukulele Tuesday Logo" class="logo">
+      <p class="description">Ukulele Tuesday is a free Ukulele club and meetup. We meet every Tuesday at the Stag's Head, Dublin, Ireland. Find more info on our socials and websites below.</p>
+      <p class="disclaimer">
+        We claim no copyright on any of the songs in these song sheets (except our own). If someone has charged you for access to our content, please <a href="https://www.ukuleletuesday.ie/contact-us/" target="_blank" rel="noopener noreferrer">contact us</a>.
+      </p>
+      <div class="social-links">
+        <a href="https://www.instagram.com/ukuleletuesday/" target="_blank" rel="noopener noreferrer" title="Instagram">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+        </a>
+        <a href="https://www.youtube.com/@UkuleleTuesday" target="_blank" rel="noopener noreferrer" title="YouTube">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+        </a>
+        <a href="https://ukuleletuesday.ie/" target="_blank" rel="noopener noreferrer" title="Website">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        </a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Show fallback only if PDF fails to load
+    const embed = document.getElementById('pdf-embed');
+    const fallback = document.getElementById('pdf-fallback');
+
+    const timeout = setTimeout(() => {
+      if (!embed.offsetHeight || embed.offsetHeight === 0) {
+        fallback.classList.add('visible');
+      }
+    }, 1000);
+
+    embed.addEventListener('load', () => {
+      clearTimeout(timeout);
+    });
+
+    embed.addEventListener('error', () => {
+      clearTimeout(timeout);
+      fallback.classList.add('visible');
+    });
+
+    // Share button functionality
+    const shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = window.location.href;
+        const title = document.title;
+
+        if (navigator.share) {
+          navigator.share({
+            title: title,
+            url: url,
+          }).catch(err => {
+            if (err.name !== 'AbortError') console.error('Share failed:', err);
+          });
+        } else {
+          navigator.clipboard.writeText(url);
+          shareBtn.style.opacity = '0.5';
+          setTimeout(() => shareBtn.style.opacity = '', 300);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

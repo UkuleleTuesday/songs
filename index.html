@@ -814,9 +814,21 @@
     if (url) {
       e.preventDefault();
       e.stopPropagation();
-      navigator.clipboard.writeText(url);
-      btn.style.opacity = '0.5';
-      setTimeout(() => btn.style.opacity = '', 300);
+
+      // Use Web Share API if available
+      if (navigator.share) {
+        navigator.share({
+          title: document.title,
+          url: url,
+        }).catch(err => {
+          if (err.name !== 'AbortError') console.error('Share failed:', err);
+        });
+      } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(url);
+        btn.style.opacity = '0.5';
+        setTimeout(() => btn.style.opacity = '', 300);
+      }
     }
   });
 </script>

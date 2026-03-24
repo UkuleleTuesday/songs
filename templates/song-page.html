@@ -72,10 +72,19 @@
     .btn-primary {
       background: #fff;
       color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .btn-primary:hover {
       background: rgba(255, 255, 255, 0.9);
+    }
+
+    a.icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .btn-secondary {
@@ -120,26 +129,19 @@
       margin-bottom: 1rem;
     }
 
-    .icon-btn {
-      padding: 8px 12px;
+    .btn-icon {
       background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: var(--radius);
       color: #fff;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
-    .icon-btn:hover {
+    .btn-icon:hover {
       background: rgba(255, 255, 255, 0.3);
     }
 
-    .icon-btn svg {
-      width: 20px;
-      height: 20px;
+    .btn-icon svg {
+      width: 18px;
+      height: 18px;
     }
 
     @media (max-width: 768px) {
@@ -175,7 +177,7 @@
         <h1>{{TITLE}}</h1>
       </div>
       <div class="header-buttons">
-        <button class="icon-btn" id="share-btn" title="Share song">
+        <button class="btn btn-icon" id="share-btn" title="Share song">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="18" cy="5" r="3"></circle>
             <circle cx="6" cy="12" r="3"></circle>
@@ -183,16 +185,18 @@
             <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
             <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
           </svg>
+          Share
         </button>
-        <a href="{{PDF_URL}}" target="_blank" rel="noopener noreferrer" class="icon-btn" title="Download PDF">
+        <a href="{{PDF_URL}}" target="_blank" rel="noopener noreferrer" class="btn btn-icon" title="Download PDF">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
+          Download
         </a>
         <a href="../../" class="btn btn-secondary" title="Back to songs">
-          ← Back to Songs
+          ← Back
         </a>
       </div>
     </div>

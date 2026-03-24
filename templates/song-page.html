@@ -31,14 +31,13 @@
       border-radius: var(--radius);
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
       gap: 1.5em;
     }
 
     .song-header-title {
       flex: 1;
       min-width: 250px;
+      margin-right: auto;
     }
 
     .song-header h1 {
@@ -160,6 +159,9 @@
 <body>
   <div class="container">
     <div class="song-header">
+      <a href="../../" class="btn btn-secondary" title="Back to songs">
+        ← Back
+      </a>
       <div class="song-header-title">
         <h1>{{TITLE}}</h1>
       </div>
@@ -181,9 +183,6 @@
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
           Download
-        </a>
-        <a href="../../" class="btn btn-secondary" title="Back to songs">
-          ← Back
         </a>
       </div>
     </div>

@@ -120,6 +120,28 @@
       margin-bottom: 1rem;
     }
 
+    .icon-btn {
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: var(--radius);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .icon-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
     @media (max-width: 768px) {
       .song-header {
         flex-direction: column;
@@ -153,6 +175,15 @@
         <h1>{{TITLE}}</h1>
       </div>
       <div class="header-buttons">
+        <button class="icon-btn" id="share-btn" title="Share song">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+        </button>
         <a href="{{PDF_URL}}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" title="Download PDF">
           📥 Download PDF
         </a>
@@ -211,6 +242,29 @@
       clearTimeout(timeout);
       fallback.classList.add('visible');
     });
+
+    // Share button functionality
+    const shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = window.location.href;
+        const title = document.title;
+
+        if (navigator.share) {
+          navigator.share({
+            title: title,
+            url: url,
+          }).catch(err => {
+            if (err.name !== 'AbortError') console.error('Share failed:', err);
+          });
+        } else {
+          navigator.clipboard.writeText(url);
+          shareBtn.style.opacity = '0.5';
+          setTimeout(() => shareBtn.style.opacity = '', 300);
+        }
+      });
+    }
   </script>
 </body>
 </html>

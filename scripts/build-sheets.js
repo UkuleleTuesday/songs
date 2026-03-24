@@ -165,6 +165,11 @@ function songPageTemplate(songId, props) {
       padding: 2rem;
       text-align: center;
       color: #666;
+      display: none;
+    }
+
+    .pdf-fallback.visible {
+      display: block;
     }
 
     .pdf-fallback p {
@@ -225,8 +230,8 @@ function songPageTemplate(songId, props) {
 
   <div class="container">
     <div class="pdf-container">
-      <embed src="${pdfUrl}" type="application/pdf" title="${escapeHtml(title)}">
-      <div class="pdf-fallback">
+      <embed id="pdf-embed" src="${pdfUrl}" type="application/pdf" title="${escapeHtml(title)}">
+      <div class="pdf-fallback" id="pdf-fallback">
         <p>📄 PDF couldn't be displayed inline.</p>
         <a href="${pdfUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
           📥 Download PDF
@@ -234,6 +239,27 @@ function songPageTemplate(songId, props) {
       </div>
     </div>
   </div>
+
+  <script>
+    // Show fallback only if PDF fails to load
+    const embed = document.getElementById('pdf-embed');
+    const fallback = document.getElementById('pdf-fallback');
+
+    const timeout = setTimeout(() => {
+      if (!embed.offsetHeight || embed.offsetHeight === 0) {
+        fallback.classList.add('visible');
+      }
+    }, 1000);
+
+    embed.addEventListener('load', () => {
+      clearTimeout(timeout);
+    });
+
+    embed.addEventListener('error', () => {
+      clearTimeout(timeout);
+      fallback.classList.add('visible');
+    });
+  </script>
 </body>
 </html>`;
 }

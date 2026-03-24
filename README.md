@@ -11,7 +11,7 @@ A searchable, browsable catalogue of [Ukulele Tuesday](https://www.ukuleletuesda
 
 ## How it works
 
-The site is generated statically at build time. There is a main static HTML file (`index.html`), and the build generates a shareable page slug for each song at `songs/<title>-<artist>`. The dataset is sourced from the [UkuleleTuesday/datasets](https://github.com/UkuleleTuesday/datasets) repository and hosted on Google Cloud Storage.
+The site is generated statically at build time. There is a main static HTML file (`index.html`), and the build generates a shareable page slug for each song at `songs/<title>-<artist>`. The dataset is sourced from the [UkuleleTuesday/datasets](https://github.com/UkuleleTuesday/datasets) repository (hosted on Google Cloud Storage), it gets copied as part of the static built artifact.
 
 ### Local development 
 

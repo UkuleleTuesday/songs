@@ -38,6 +38,51 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+// Determine difficulty band
+function difficultyBand(val) {
+  if (val == null || val === "") return null;
+  const n = parseFloat(val);
+  if (isNaN(n)) return null;
+  if (n <= 2.0) return "easy";
+  if (n <= 3.5) return "medium";
+  return "hard";
+}
+
+// Status labels mapping
+const STATUS_LABELS = {
+  APPROVED: "Approved",
+  READY_TO_PLAY: "Ready to play",
+  DRAFT: "Draft",
+  REJECTED: "Rejected",
+};
+
+// Generate metadata chips HTML
+function generateMetadataChips(props) {
+  const chips = [];
+
+  if (props.status) {
+    const label = STATUS_LABELS[props.status] || props.status;
+    chips.push(`<span class="chip chip-status-${escapeHtml(props.status)}" style="background-color: rgba(255, 255, 255, 0.25); color: #fff; display: inline-block; font-size: 0.75rem; font-weight: 500; padding: 2px 8px; border-radius: 12px;">${escapeHtml(label)}</span>`);
+  }
+
+  const band = difficultyBand(props.difficulty);
+  if (band) {
+    chips.push(`<span class="chip chip-diff-${band}" style="background-color: rgba(255, 255, 255, 0.25); color: #fff; display: inline-block; font-size: 0.75rem; font-weight: 500; padding: 2px 8px; border-radius: 12px;">${escapeHtml(props.difficulty)}</span>`);
+  }
+
+  if (props.year) {
+    chips.push(`<span class="chip chip-neutral" style="background-color: rgba(255, 255, 255, 0.25); color: #fff; display: inline-block; font-size: 0.75rem; font-weight: 500; padding: 2px 8px; border-radius: 12px;">${escapeHtml(props.year)}</span>`);
+  }
+
+  return chips.join('');
+}
+
+// Generate chords HTML
+function generateChordsHtml(chords) {
+  if (!chords) return '';
+  return `<div class="song-chords">${escapeHtml(chords)}</div>`;
+}
+
 // Render template with variables
 function renderTemplate(templateStr, vars) {
   let result = templateStr;
@@ -82,6 +127,8 @@ rl.on('line', (line) => {
       DESCRIPTION: escapeHtml(description),
       PDF_URL: pdfUrl,
       SLUG: slug,
+      METADATA_CHIPS: generateMetadataChips(props),
+      CHORDS_HTML: generateChordsHtml(props.chords),
     };
 
     // Render and write

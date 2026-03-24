@@ -8,8 +8,7 @@ Try it at: https://ukuleletuesday.github.io/songs/
 
 - **Full-text search** powered by [lunr.js](https://lunrjs.com/)
 - **Filter by songbook** to narrow results to a specific collection
-- **Grid / List view** toggle for browsing comfort
-- Links directly to **PDF song sheets**
+- Provides direct downloads to individual **PDF song sheets**, and human friendly shareable URLs for song sheets 
 
 ## How it works
 

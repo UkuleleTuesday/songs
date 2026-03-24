@@ -22,7 +22,7 @@ Build the site:
 pnpm build
 ```
 
-This will download the song dataset and generate all the static pages.
+This will download the song dataset (the latest `data.jsonl` from GCS) and generate all the static pages.
 
 To build and spin up a local server for testing, use 
 
@@ -32,10 +32,7 @@ pnpm serve
 
 ### Deployment
 
-The [Deploy GitHub Pages](.github/workflows/deploy-pages.yml) workflow:
-
-1. Downloads the latest `data.jsonl` from GCS
-2. Publishes `index.html` + `data.jsonl` to GitHub Pages
+The [Deploy GitHub Pages](.github/workflows/deploy-pages.yml) workflow builds the site using `pnpm build` and pushes it to GitHub pages.
 
 The workflow runs automatically whenever:
 - `index.html` is updated on `main`, or

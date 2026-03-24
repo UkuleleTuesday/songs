@@ -1,6 +1,8 @@
-# Ukulele Tuesday – Song Sheets
+# Ukulele Tuesday – Song Explorer
 
 A searchable, browsable catalogue of [Ukulele Tuesday](https://www.ukuleletuesday.ie/) song sheets, published as a GitHub Pages site.
+
+Try it at: https://ukuleletuesday.github.io/songs/
 
 ## Features
 

@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const { slugify, difficultyBand, STATUS_LABELS, escHtml } = require('../utils.js');
 
 // Create sheets directory
 const sheetsDir = path.join(__dirname, '../sheets');
@@ -14,73 +15,36 @@ if (!fs.existsSync(sheetsDir)) {
 const templatePath = path.join(__dirname, '../templates/song-page.html');
 const template = fs.readFileSync(templatePath, 'utf8');
 
-// Slug generator - matches client-side version
-function slugify(text) {
-  if (!text) return 'unknown';
-  return text
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/[^\w-]/g, '')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 100);
+function metaRow(label, value) {
+  return `<div class="meta-row"><span class="meta-label">${label}</span><span class="meta-value">${value}</span></div>`;
 }
 
-// HTML escape for safe embedding in attributes
-function escapeHtml(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+// Generate labeled metadata rows HTML
+function generateMetadataRows(props) {
+  const rows = [];
 
-// Determine difficulty band
-function difficultyBand(val) {
-  if (val == null || val === "") return null;
-  const n = parseFloat(val);
-  if (isNaN(n)) return null;
-  if (n <= 2.0) return "easy";
-  if (n <= 3.5) return "medium";
-  return "hard";
-}
+  if (props.artist) rows.push(metaRow('Artist', escHtml(props.artist)));
 
-// Status labels mapping
-const STATUS_LABELS = {
-  APPROVED: "Approved",
-  READY_TO_PLAY: "Ready to play",
-  DRAFT: "Draft",
-  REJECTED: "Rejected",
-};
-
-// Generate metadata chips HTML
-function generateMetadataChips(props) {
-  const chips = [];
-
-  if (props.status) {
-    const label = STATUS_LABELS[props.status] || props.status;
-    chips.push(`<span class="chip chip-status-${escapeHtml(props.status)}" style="background-color: rgba(255, 255, 255, 0.25); color: #fff; display: inline-block; font-size: 0.75rem; font-weight: 500; padding: 2px 8px; border-radius: 12px;">${escapeHtml(label)}</span>`);
+  if (props.chords) {
+    const pills = props.chords.split(',')
+      .map(c => c.trim()).filter(Boolean)
+      .map(c => `<span class="chord-pill">${escHtml(c)}</span>`)
+      .join('');
+    rows.push(metaRow('Chords', `<span class="chord-pills">${pills}</span>`));
   }
 
   const band = difficultyBand(props.difficulty);
-  if (band) {
-    chips.push(`<span class="chip chip-diff-${band}" style="background-color: rgba(255, 255, 255, 0.25); color: #fff; display: inline-block; font-size: 0.75rem; font-weight: 500; padding: 2px 8px; border-radius: 12px;">${escapeHtml(props.difficulty)}</span>`);
-  }
+  if (band) rows.push(metaRow('Difficulty',
+    `<span class="chip chip-diff-${band}">${escHtml(props.difficulty)}</span>`));
 
-  if (props.year) {
-    chips.push(`<span class="chip chip-neutral" style="background-color: rgba(255, 255, 255, 0.25); color: #fff; display: inline-block; font-size: 0.75rem; font-weight: 500; padding: 2px 8px; border-radius: 12px;">${escapeHtml(props.year)}</span>`);
-  }
+  if (props.year) rows.push(metaRow('Year', escHtml(props.year)));
 
-  return chips.join('');
-}
+  if (props.language) rows.push(metaRow('Language', escHtml(props.language)));
 
-// Generate chords HTML
-function generateChordsHtml(chords) {
-  if (!chords) return '';
-  return `<div class="song-chords">${escapeHtml(chords)}</div>`;
+  if (props.status) rows.push(metaRow('Status',
+    `<span class="chip chip-status-${escHtml(props.status)}">${escHtml(STATUS_LABELS[props.status] || props.status)}</span>`));
+
+  return rows.length ? `<div class="song-meta">${rows.join('')}</div>` : '';
 }
 
 // Render template with variables
@@ -122,13 +86,19 @@ rl.on('line', (line) => {
     const title = `${props.song} – ${props.artist}`;
     const description = `Ukulele chord sheet for "${props.song}" by ${props.artist}. Free chord sheet from Ukulele Tuesday.`;
 
+    const searchQuery = encodeURIComponent(`${props.song} ${props.artist}`);
+    const spotifyUrl = `https://open.spotify.com/search/${searchQuery}`;
+    const youtubeUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
+
     const templateVars = {
-      TITLE: escapeHtml(title),
-      DESCRIPTION: escapeHtml(description),
+      TITLE: escHtml(title),
+      SONG: escHtml(props.song),
+      DESCRIPTION: escHtml(description),
       PDF_URL: pdfUrl,
+      SPOTIFY_URL: spotifyUrl,
+      YOUTUBE_URL: youtubeUrl,
       SLUG: slug,
-      METADATA_CHIPS: generateMetadataChips(props),
-      CHORDS_HTML: generateChordsHtml(props.chords),
+      METADATA_ROWS: generateMetadataRows(props),
     };
 
     // Render and write

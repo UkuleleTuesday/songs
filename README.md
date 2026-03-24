@@ -11,7 +11,24 @@ A searchable, browsable catalogue of [Ukulele Tuesday](https://www.ukuleletuesda
 
 ## How it works
 
-The site is a single static HTML file (`index.html`) that fetches a `data.jsonl` dataset at runtime. The dataset is sourced from the [UkuleleTuesday/datasets](https://github.com/UkuleleTuesday/datasets) repository and hosted on Google Cloud Storage.
+The site is generated statically at build time. There is a main static HTML file (`index.html`), and the build generates a shareable page slug for each song at `songs/<title>-<artist>`. The dataset is sourced from the [UkuleleTuesday/datasets](https://github.com/UkuleleTuesday/datasets) repository and hosted on Google Cloud Storage.
+
+### Local development 
+
+Recommended setup: use pnpm.
+
+Build the site:
+```
+pnpm build
+```
+
+This will download the song dataset and generate all the static pages.
+
+To build and spin up a local server for testing, use 
+
+```
+pnpm serve
+```
 
 ### Deployment
 

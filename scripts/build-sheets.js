@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
-const { slugify, difficultyBand, STATUS_LABELS, escHtml } = require('../utils.js');
+const { slugify, difficultyBand, STATUS_LABELS, escHtml, isNewSong } = require('../utils.js');
 
 // Create sheets directory
 const sheetsDir = path.join(__dirname, '../sheets');
@@ -90,6 +90,11 @@ rl.on('line', (line) => {
     const spotifyUrl = `https://open.spotify.com/search/${searchQuery}`;
     const youtubeUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
 
+    const badges = [];
+    if (isNewSong(props.ready_to_play_date)) {
+      badges.push(`<span class="chip chip-new">New</span>`);
+    }
+
     const templateVars = {
       TITLE: escHtml(title),
       SONG: escHtml(props.song),
@@ -99,6 +104,7 @@ rl.on('line', (line) => {
       YOUTUBE_URL: youtubeUrl,
       SLUG: slug,
       METADATA_ROWS: generateMetadataRows(props),
+      BADGES: badges.length ? ` ${badges.join('')}` : '',
     };
 
     // Render and write

@@ -360,6 +360,7 @@
     .chip-diff-hard   { background: #ffebee; color: #b71c1c; }
 
     .chip-neutral { background: #f5f5f5; color: #555; }
+    .chip-new     { background: #ff6f00; color: #fff; font-weight: 600; }
 
     /* ── No results ── */
     .no-results {

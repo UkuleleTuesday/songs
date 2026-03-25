@@ -170,7 +170,11 @@
       ? `<span class="chip chip-neutral">${escHtml(p.year)}</span>`
       : "";
 
-    const chips = statusChip + diffChip + yearChip;
+    const newChip = isNewSong(p.ready_to_play_date)
+      ? `<span class="chip chip-new">New</span>`
+      : "";
+
+    const chips = newChip + statusChip + diffChip + yearChip;
 
     const chordsHtml = p.chords
       ? `<div class="card-chords" title="${escHtml(p.chords)}">${escHtml(p.chords)}</div>`

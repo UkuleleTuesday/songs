@@ -36,4 +36,13 @@ function escHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-if (typeof module !== 'undefined') module.exports = { slugify, difficultyBand, STATUS_LABELS, escHtml };
+function isNewSong(readyToPlayDate) {
+  if (!readyToPlayDate) return false;
+  const d = new Date(readyToPlayDate);
+  if (isNaN(d)) return false;
+  const twoMonthsAgo = new Date();
+  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+  return d >= twoMonthsAgo;
+}
+
+if (typeof module !== 'undefined') module.exports = { slugify, difficultyBand, STATUS_LABELS, escHtml, isNewSong };

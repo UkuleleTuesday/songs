@@ -1,18 +1,14 @@
-name: Deploy GitHub Pages
+name: CI
 
 on:
   push:
     branches:
       - main
     paths:
-      - "index.html"
-  workflow_run:
-    workflows:
-      - "Synchronize Datasets"
-    types:
-      - completed
-    branches:
-      - main
+      - "src/**"
+  pull_request:
+    paths:
+      - "src/**"
   workflow_dispatch:
 
 permissions:
@@ -25,11 +21,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,23 +30,38 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 10
 
-      - name: Build (download data + generate sheets)
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build (download data + generate site)
         run: pnpm build
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
       - name: Upload artifact
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./
+          path: ./dist
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - name: Deploy to GitHub Pages
         id: deployment

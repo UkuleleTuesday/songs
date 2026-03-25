@@ -1,27 +1,101 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import { slugify, difficultyBand, escHtml, buildBadges, renderBadge } from '../../utils/utils.js';
+import '../../styles/styles.css';
+
+export async function getStaticPaths() {
+  let lines = [];
+  try {
+    lines = fs.readFileSync(path.resolve('public/data.jsonl'), 'utf8').trim().split('\n').filter(Boolean);
+  } catch {
+    return []; // graceful fallback when data.jsonl is absent (e.g. first dev run)
+  }
+
+  const seen = new Set();
+  return lines.flatMap(line => {
+    try {
+      const song = JSON.parse(line);
+      const p = song.properties || {};
+      if (!p.song || !p.artist) return [];
+      const slug = `${slugify(p.song)}-${slugify(p.artist)}`;
+      if (seen.has(slug)) return [];
+      seen.add(slug);
+      return [{ params: { slug }, props: { song } }];
+    } catch {
+      return [];
+    }
+  });
+}
+
+const { song } = Astro.props;
+const props = song.properties || {};
+const base = import.meta.env.BASE_URL;
+
+const encodedId = encodeURIComponent(song.id);
+const pdfUrl = `https://storage.googleapis.com/songbook-generator-cache-europe-west1/song-sheets/${encodedId}.pdf`;
+const title = `${props.song} – ${props.artist}`;
+const description = `Ukulele chord sheet for "${props.song}" by ${props.artist}. Free chord sheet from Ukulele Tuesday.`;
+const searchQuery = encodeURIComponent(`${props.song} ${props.artist}`);
+const spotifyUrl = `https://open.spotify.com/search/${searchQuery}`;
+const youtubeUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
+
+const band = difficultyBand(props.difficulty);
+const badges = buildBadges(props);
+const badgesHtml = badges.map(b => renderBadge(b)).join('');
+
+function metaRow(label, value) {
+  return `<div class="meta-row"><span class="meta-label">${label}</span><span class="meta-value">${value}</span></div>`;
+}
+
+function generateMetadataRows(p) {
+  const rows = [];
+
+  if (p.artist) rows.push(metaRow('Artist', escHtml(p.artist)));
+
+  if (p.chords) {
+    const pills = p.chords.split(',')
+      .map(c => c.trim()).filter(Boolean)
+      .map(c => `<span class="chord-pill">${escHtml(c)}</span>`)
+      .join('');
+    rows.push(metaRow('Chords', `<span class="chord-pills">${pills}</span>`));
+  }
+
+  if (band) rows.push(metaRow('Difficulty',
+    `<span class="chip chip-diff-${band}">${escHtml(props.difficulty)}</span>`));
+
+  if (p.year)     rows.push(metaRow('Year',     escHtml(p.year)));
+  if (p.language) rows.push(metaRow('Language', escHtml(p.language)));
+
+  return rows.length ? `<div class="song-meta">${rows.join('')}</div>` : '';
+}
+
+const metadataRows = generateMetadataRows(props);
+---
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{TITLE}}</title>
-  <meta name="description" content="{{DESCRIPTION}}">
+  <title>{title}</title>
+  <meta name="description" content={description}>
 
   <!-- Social Media Meta Tags -->
-  <meta property="og:title" content="{{TITLE}}">
-  <meta property="og:description" content="{{DESCRIPTION}}">
+  <meta property="og:title" content={title}>
+  <meta property="og:description" content={description}>
   <meta property="og:image" content="https://songbooks.ukuleletuesday.ie/assets/uke-closeup.jpeg">
-  <meta property="og:url" content="https://ukuleletuesday.github.io/songs/sheets/{{SLUG}}/">
+  <meta property="og:url" content={`https://ukuleletuesday.github.io/songs/sheets/${Astro.params.slug}/`}>
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{TITLE}}">
-  <meta name="twitter:description" content="{{DESCRIPTION}}">
+  <meta name="twitter:title" content={title}>
+  <meta name="twitter:description" content={description}>
   <meta name="twitter:image" content="https://songbooks.ukuleletuesday.ie/assets/uke-closeup.jpeg">
 
   <link rel="icon" href="https://songbooks.ukuleletuesday.ie/assets/favicon.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pattaya&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../styles.css">
   <style>
     .btn-spotify {
       background: #1DB954;
@@ -113,26 +187,28 @@
 <body>
   <div class="container">
     <header>
-      <a href="../../"><img src="../../ut-logo-wordmark.svg" alt="Ukulele Tuesday" class="header-logo"></a>
+      <a href={base}><img src={`${base}/ut-logo-wordmark.svg`} alt="Ukulele Tuesday" class="header-logo"></a>
       <div class="header-text">
         <h1>Song Explorer</h1>
       </div>
-      <a href="../../" class="btn btn-secondary" title="Back to songs">← Back</a>
+      <a href={base} class="btn btn-secondary" title="Back to songs">← Back</a>
     </header>
 
     <div class="controls song-controls">
       <div class="song-info">
-        <div class="song-title">{{SONG}}{{BADGES}}</div>
-        {{METADATA_ROWS}}
+        <div class="song-title">
+          {props.song}<Fragment set:html={badgesHtml ? ` ${badgesHtml}` : ''} />
+        </div>
+        <Fragment set:html={metadataRows} />
       </div>
       <div class="header-buttons">
-        <a href="{{SPOTIFY_URL}}" target="_blank" rel="noopener noreferrer" class="btn btn-spotify" title="Find on Spotify">
+        <a href={spotifyUrl} target="_blank" rel="noopener noreferrer" class="btn btn-spotify" title="Find on Spotify">
           <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.623.623 0 1 1-.277-1.215c3.809-.87 7.076-.496 9.712 1.115a.623.623 0 0 1 .207.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 0 1-.973-.52.781.781 0 0 1 .52-.972c3.632-1.102 8.147-.568 11.233 1.329a.78.78 0 0 1 .257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 1 1-.543-1.794c3.532-1.072 9.404-.865 13.115 1.338a.937.937 0 0 1-.955 1.613z"/>
           </svg>
           Spotify
         </a>
-        <a href="{{YOUTUBE_URL}}" target="_blank" rel="noopener noreferrer" class="btn btn-youtube" title="Find on YouTube">
+        <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" class="btn btn-youtube" title="Find on YouTube">
           <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
           </svg>
@@ -148,7 +224,7 @@
           </svg>
           Share
         </button>
-        <a href="{{PDF_URL}}" target="_blank" rel="noopener noreferrer" class="btn btn-icon" title="Download PDF">
+        <a href={pdfUrl} target="_blank" rel="noopener noreferrer" class="btn btn-icon" title="Download PDF">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
@@ -160,10 +236,10 @@
     </div>
 
     <div class="pdf-container">
-      <embed id="pdf-embed" src="{{PDF_URL}}" type="application/pdf" title="{{TITLE}}">
+      <embed id="pdf-embed" src={pdfUrl} type="application/pdf" title={title}>
       <div class="pdf-fallback" id="pdf-fallback">
         <p>📄 PDF couldn't be displayed inline.</p>
-        <a href="{{PDF_URL}}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+        <a href={pdfUrl} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
           📥 Download PDF
         </a>
       </div>

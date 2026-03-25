@@ -40,6 +40,4 @@ pnpm preview
 
 The [Deploy GitHub Pages](.github/workflows/deploy-pages.yml) workflow installs dependencies, runs `pnpm build`, and deploys the `dist/` output to GitHub Pages.
 
-The workflow runs automatically whenever:
-- Any file under `src/` is updated on `main`, or
-- The upstream *Synchronize Datasets* workflow completes on `main`
+The workflow runs automatically when any file under `src/` is updated on `main`.

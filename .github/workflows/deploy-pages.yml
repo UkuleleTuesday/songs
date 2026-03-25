@@ -6,13 +6,6 @@ on:
       - main
     paths:
       - "src/**"
-  workflow_run:
-    workflows:
-      - "Synchronize Datasets"
-    types:
-      - completed
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:

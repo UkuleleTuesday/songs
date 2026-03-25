@@ -251,9 +251,10 @@ document.addEventListener('click', (e) => {
       navigator.share({ title: document.title, url })
         .catch(err => { if (err.name !== 'AbortError') console.error('Share failed:', err); });
     } else {
-      navigator.clipboard.writeText(url);
-      btn.style.opacity = '0.5';
-      setTimeout(() => btn.style.opacity = '', 300);
+      navigator.clipboard.writeText(url).then(() => {
+        btn.classList.add('copied');
+        setTimeout(() => btn.classList.remove('copied'), 1500);
+      });
     }
   }
 });

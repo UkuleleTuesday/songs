@@ -3,6 +3,6 @@ node_modules/
 pnpm-lock.yaml
 public/data.jsonl
 dist/
-sheets/
+/sheets/
 .astro/
 .DS_Store

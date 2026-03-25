@@ -253,6 +253,32 @@
       color: #333;
     }
 
+    .icon-btn.copied,
+    .btn-icon.copied {
+      background: #e8f5e9;
+      border-color: #4caf50;
+      position: relative;
+    }
+
+    .icon-btn.copied svg,
+    .btn-icon.copied svg { color: #4caf50; }
+
+    .icon-btn.copied::after,
+    .btn-icon.copied::after {
+      content: 'Copied!';
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
     /* Grid card */
     .card-accent { height: 3px; }
     .accent-easy    { background: #a5d6a7; }

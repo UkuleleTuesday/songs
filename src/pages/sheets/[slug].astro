@@ -294,16 +294,13 @@ const metadataRows = generateMetadataRows(props);
         const title = document.title;
 
         if (navigator.share) {
-          navigator.share({
-            title: title,
-            url: url,
-          }).catch(err => {
-            if (err.name !== 'AbortError') console.error('Share failed:', err);
-          });
+          navigator.share({ title, url })
+            .catch(err => { if (err.name !== 'AbortError') console.error('Share failed:', err); });
         } else {
-          navigator.clipboard.writeText(url);
-          shareBtn.style.opacity = '0.5';
-          setTimeout(() => shareBtn.style.opacity = '', 300);
+          navigator.clipboard.writeText(url).then(() => {
+            shareBtn.classList.add('copied');
+            setTimeout(() => shareBtn.classList.remove('copied'), 1500);
+          });
         }
       });
     }

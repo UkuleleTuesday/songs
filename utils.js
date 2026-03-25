@@ -48,8 +48,8 @@ const BADGE_DEFS = {
   },
   wip: {
     id:      'wip',
-    label:   'Preview',
-    icon:    '👀',
+    label:   'Work In Progress',
+    icon:    '🚧',
     tooltip: 'This song is not yet final — chords or lyrics may change',
   },
 };
@@ -70,8 +70,9 @@ function buildBadges(props) {
   return badges;
 }
 
-function renderBadge(badge) {
-  return `<span class="chip chip-${escHtml(badge.id)}" title="${escHtml(badge.tooltip)}">${escHtml(badge.icon)} ${escHtml(badge.label)}</span>`;
+function renderBadge(badge, { iconOnly = false } = {}) {
+  const content = iconOnly ? escHtml(badge.icon) : `${escHtml(badge.icon)} ${escHtml(badge.label)}`;
+  return `<span class="chip chip-${escHtml(badge.id)}" title="${escHtml(badge.tooltip)}">${content}</span>`;
 }
 
 if (typeof module !== 'undefined') module.exports = { slugify, difficultyBand, STATUS_LABELS, escHtml, BADGE_DEFS, isNewSong, buildBadges, renderBadge };

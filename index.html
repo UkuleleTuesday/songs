@@ -166,7 +166,7 @@
       ? `<span class="chip chip-neutral">${escHtml(p.year)}</span>`
       : "";
 
-    const chips = buildBadges(p).map(renderBadge).join("") + diffChip + yearChip;
+    const chips = buildBadges(p).map(b => renderBadge(b, { iconOnly: true })).join("") + diffChip + yearChip;
 
     const chordsHtml = p.chords
       ? `<div class="card-chords" title="${escHtml(p.chords)}">${escHtml(p.chords)}</div>`
@@ -178,7 +178,7 @@
       <div class="card" role="listitem" style="position: relative;">
         <a href="${url}" target="_blank" rel="noopener noreferrer"
            aria-label="Open song sheet: ${title} by ${artist}" style="text-decoration: none; color: inherit;">
-          <div class="card-accent accent-${p.status || "default"}"></div>
+          <div class="card-accent accent-${band || "default"}"></div>
           <div class="card-body">
             <div class="card-title">${title}</div>
             <div class="card-artist">${artist}</div>

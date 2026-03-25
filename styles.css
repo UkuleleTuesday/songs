@@ -255,11 +255,10 @@
 
     /* Grid card */
     .card-accent { height: 3px; }
-    .accent-APPROVED     { background: #4caf50; }
-    .accent-READY_TO_PLAY { background: #1976d2; }
-    .accent-DRAFT        { background: #ffa000; }
-    .accent-REJECTED     { background: #e53935; }
-    .accent-default      { background: #bdbdbd; }
+    .accent-easy    { background: #a5d6a7; }
+    .accent-medium  { background: #ffcc80; }
+    .accent-hard    { background: #ef9a9a; }
+    .accent-default { background: #bdbdbd; }
 
     .card-body { padding: 14px 16px; }
 

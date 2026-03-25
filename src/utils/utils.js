@@ -1,4 +1,4 @@
-function slugify(text) {
+export function slugify(text) {
   if (!text) return 'unknown';
   return text
     .toLowerCase()
@@ -11,7 +11,7 @@ function slugify(text) {
     .slice(0, 100);
 }
 
-function difficultyBand(val) {
+export function difficultyBand(val) {
   if (val == null || val === "") return null;
   const n = parseFloat(val);
   if (isNaN(n)) return null;
@@ -20,14 +20,14 @@ function difficultyBand(val) {
   return "hard";
 }
 
-const STATUS_LABELS = {
+export const STATUS_LABELS = {
   APPROVED:      "Approved",
   READY_TO_PLAY: "Ready to play",
   DRAFT:         "Draft",
   REJECTED:      "Rejected",
 };
 
-function escHtml(str) {
+export function escHtml(str) {
   return String(str ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -39,7 +39,7 @@ function escHtml(str) {
 // ── Badge data model ──────────────────────────────────────────────────────────
 // Each badge: { id, label, icon, tooltip }
 
-const BADGE_DEFS = {
+export const BADGE_DEFS = {
   new: {
     id:      'new',
     label:   'New',
@@ -54,7 +54,7 @@ const BADGE_DEFS = {
   },
 };
 
-function isNewSong(readyToPlayDate) {
+export function isNewSong(readyToPlayDate) {
   if (!readyToPlayDate) return false;
   const d = new Date(readyToPlayDate);
   if (isNaN(d)) return false;
@@ -63,16 +63,14 @@ function isNewSong(readyToPlayDate) {
   return d >= twoMonthsAgo;
 }
 
-function buildBadges(props) {
+export function buildBadges(props) {
   const badges = [];
   if (isNewSong(props.ready_to_play_date)) badges.push(BADGE_DEFS.new);
   if (props.status === 'READY_TO_PLAY')    badges.push(BADGE_DEFS.wip);
   return badges;
 }
 
-function renderBadge(badge, { iconOnly = false } = {}) {
+export function renderBadge(badge, { iconOnly = false } = {}) {
   const content = iconOnly ? escHtml(badge.icon) : `${escHtml(badge.icon)} ${escHtml(badge.label)}`;
   return `<span class="chip chip-${escHtml(badge.id)}" title="${escHtml(badge.tooltip)}">${content}</span>`;
 }
-
-if (typeof module !== 'undefined') module.exports = { slugify, difficultyBand, STATUS_LABELS, escHtml, BADGE_DEFS, isNewSong, buildBadges, renderBadge };

@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "index.html"
+      - "src/**"
   workflow_run:
     workflows:
       - "Synchronize Datasets"
@@ -44,7 +44,10 @@ jobs:
         with:
           version: 10
 
-      - name: Build (download data + generate sheets)
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build (download data + generate site)
         run: pnpm build
 
       - name: Setup Pages
@@ -53,7 +56,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./
+          path: ./dist
 
       - name: Deploy to GitHub Pages
         id: deployment

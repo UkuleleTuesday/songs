@@ -3,15 +3,16 @@
   "version": "1.0.0",
   "description": "Ukulele Tuesday Song Explorer - browse and search song sheets",
   "devDependencies": {
-    "http-server": "^14.1.1"
+    "astro": "^6.0.8"
   },
   "scripts": {
-    "dev": "http-server -p 8000 -c-1",
-    "download-data": "curl -fsSL 'https://ukulele-tuesday-datasets.storage.googleapis.com/song-sheets/aggregated/latest/data.jsonl' -o data.jsonl",
-    "build-sheets": "node scripts/build-sheets.js",
-    "build": "pnpm download-data && pnpm build-sheets",
-    "clean": "rm -rf data.jsonl sheets/",
-    "rebuild": "pnpm clean && pnpm build",
-    "serve": "pnpm build && pnpm dev"
+    "dev": "astro dev",
+    "build": "pnpm download-data && astro build",
+    "preview": "astro preview",
+    "download-data": "curl -fsSL 'https://ukulele-tuesday-datasets.storage.googleapis.com/song-sheets/aggregated/latest/data.jsonl' -o public/data.jsonl",
+    "clean": "rm -rf dist/ public/data.jsonl"
+  },
+  "dependencies": {
+    "lunr": "^2.3.9"
   }
 }

@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
-const { slugify, difficultyBand, STATUS_LABELS, escHtml, isNewSong } = require('../utils.js');
+const { slugify, difficultyBand, STATUS_LABELS, escHtml, buildBadges, renderBadge } = require('../utils.js');
 
 // Create sheets directory
 const sheetsDir = path.join(__dirname, '../sheets');
@@ -40,9 +40,6 @@ function generateMetadataRows(props) {
   if (props.year) rows.push(metaRow('Year', escHtml(props.year)));
 
   if (props.language) rows.push(metaRow('Language', escHtml(props.language)));
-
-  if (props.status) rows.push(metaRow('Status',
-    `<span class="chip chip-status-${escHtml(props.status)}">${escHtml(STATUS_LABELS[props.status] || props.status)}</span>`));
 
   return rows.length ? `<div class="song-meta">${rows.join('')}</div>` : '';
 }
@@ -90,10 +87,7 @@ rl.on('line', (line) => {
     const spotifyUrl = `https://open.spotify.com/search/${searchQuery}`;
     const youtubeUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
 
-    const badges = [];
-    if (isNewSong(props.ready_to_play_date)) {
-      badges.push(`<span class="chip chip-new">New</span>`);
-    }
+    const badges = buildBadges(props);
 
     const templateVars = {
       TITLE: escHtml(title),
@@ -104,7 +98,7 @@ rl.on('line', (line) => {
       YOUTUBE_URL: youtubeUrl,
       SLUG: slug,
       METADATA_ROWS: generateMetadataRows(props),
-      BADGES: badges.length ? ` ${badges.join('')}` : '',
+      BADGES: badges.length ? ` ${badges.map(renderBadge).join('')}` : '',
     };
 
     // Render and write

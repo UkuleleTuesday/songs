@@ -350,17 +350,13 @@
       white-space: nowrap;
     }
 
-    .chip-status-APPROVED      { background: #e8f5e9; color: #2e7d32; }
-    .chip-status-READY_TO_PLAY { background: #e3f2fd; color: #1565c0; }
-    .chip-status-DRAFT         { background: #fff8e1; color: #f57f17; }
-    .chip-status-REJECTED      { background: #ffebee; color: #c62828; }
-
     .chip-diff-easy   { background: #e8f5e9; color: #1b5e20; }
     .chip-diff-medium { background: #fff8e1; color: #e65100; }
     .chip-diff-hard   { background: #ffebee; color: #b71c1c; }
 
     .chip-neutral { background: #f5f5f5; color: #555; }
-    .chip-new     { background: #ff6f00; color: #fff; font-weight: 600; }
+    .chip-new { background: #ff6f00; color: #fff; font-weight: 600; cursor: default; }
+    .chip-wip { background: #ede7f6; color: #4527a0; cursor: default; }
 
     /* ── No results ── */
     .no-results {

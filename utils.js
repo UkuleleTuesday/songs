@@ -36,6 +36,24 @@ function escHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
+// ── Badge data model ──────────────────────────────────────────────────────────
+// Each badge: { id, label, icon, tooltip }
+
+const BADGE_DEFS = {
+  new: {
+    id:      'new',
+    label:   'New',
+    icon:    '✨',
+    tooltip: 'Added to the songbook in the last 2 months',
+  },
+  wip: {
+    id:      'wip',
+    label:   'Preview',
+    icon:    '👀',
+    tooltip: 'This song is not yet final — chords or lyrics may change',
+  },
+};
+
 function isNewSong(readyToPlayDate) {
   if (!readyToPlayDate) return false;
   const d = new Date(readyToPlayDate);
@@ -45,4 +63,15 @@ function isNewSong(readyToPlayDate) {
   return d >= twoMonthsAgo;
 }
 
-if (typeof module !== 'undefined') module.exports = { slugify, difficultyBand, STATUS_LABELS, escHtml, isNewSong };
+function buildBadges(props) {
+  const badges = [];
+  if (isNewSong(props.ready_to_play_date)) badges.push(BADGE_DEFS.new);
+  if (props.status === 'READY_TO_PLAY')    badges.push(BADGE_DEFS.wip);
+  return badges;
+}
+
+function renderBadge(badge) {
+  return `<span class="chip chip-${escHtml(badge.id)}" title="${escHtml(badge.tooltip)}">${escHtml(badge.icon)} ${escHtml(badge.label)}</span>`;
+}
+
+if (typeof module !== 'undefined') module.exports = { slugify, difficultyBand, STATUS_LABELS, escHtml, BADGE_DEFS, isNewSong, buildBadges, renderBadge };

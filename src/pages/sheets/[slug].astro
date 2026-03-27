@@ -1,7 +1,7 @@
 ---
 import fs from 'node:fs';
 import path from 'node:path';
-import { slugify, difficultyBand, escHtml, buildBadges, renderBadge } from '../../utils/utils.js';
+import { slugify, difficultyBand, difficultyLabel, escHtml, buildBadges, renderBadge } from '../../utils/utils.js';
 import '../../styles/styles.css';
 
 export async function getStaticPaths() {
@@ -62,7 +62,7 @@ function generateMetadataRows(p) {
   }
 
   if (band) rows.push(metaRow('Difficulty',
-    `<span class="chip chip-diff-${band}">${escHtml(props.difficulty)}</span>`));
+    `<span class="chip chip-diff-${band}">${escHtml(difficultyLabel(band))}</span>`));
 
   if (p.year)     rows.push(metaRow('Year',     escHtml(p.year)));
   if (p.language) rows.push(metaRow('Language', escHtml(p.language)));

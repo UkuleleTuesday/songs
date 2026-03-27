@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   slugify,
   difficultyBand,
+  difficultyLabel,
   escHtml,
   isNewSong,
   buildBadges,
@@ -67,6 +68,28 @@ describe('difficultyBand', () => {
     expect(difficultyBand(undefined)).toBeNull();
     expect(difficultyBand('')).toBeNull();
     expect(difficultyBand('abc')).toBeNull();
+  });
+});
+
+// ── difficultyLabel ────────────────────────────────────────────────────────
+
+describe('difficultyLabel', () => {
+  it('returns "Beginner" for easy', () => {
+    expect(difficultyLabel('easy')).toBe('Beginner');
+  });
+
+  it('returns "Intermediate" for medium', () => {
+    expect(difficultyLabel('medium')).toBe('Intermediate');
+  });
+
+  it('returns "Advanced" for hard', () => {
+    expect(difficultyLabel('hard')).toBe('Advanced');
+  });
+
+  it('returns null for unknown or missing band', () => {
+    expect(difficultyLabel(null)).toBeNull();
+    expect(difficultyLabel(undefined)).toBeNull();
+    expect(difficultyLabel('')).toBeNull();
   });
 });
 

@@ -2,6 +2,7 @@ import lunr from 'lunr';
 import {
   slugify,
   difficultyBand,
+  difficultyLabel,
   escHtml,
   buildBadges,
   renderBadge,
@@ -128,7 +129,7 @@ function renderCard(song) {
   const artist = escHtml(p.artist || 'Unknown artist');
 
   const diffChip = band
-    ? `<span class="chip chip-diff-${band}">${escHtml(p.difficulty)}</span>`
+    ? `<span class="chip chip-diff-${band}">${escHtml(difficultyLabel(band))}</span>`
     : '';
 
   const yearChip = p.year

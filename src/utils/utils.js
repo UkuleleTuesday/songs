@@ -20,6 +20,13 @@ export function difficultyBand(val) {
   return "hard";
 }
 
+export function difficultyLabel(band) {
+  if (band === "easy")   return "Beginner";
+  if (band === "medium") return "Intermediate";
+  if (band === "hard")   return "Advanced";
+  return null;
+}
+
 export const STATUS_LABELS = {
   APPROVED:      "Approved",
   READY_TO_PLAY: "Ready to play",

@@ -18,16 +18,18 @@ The dataset is sourced from the [UkuleleTuesday/datasets](https://github.com/Uku
 
 ## Local development
 
-Recommended setup: use pnpm.
+Recommended setup: use [pnpm](https://pnpm.io/). Requires **Node.js >=22.12.0**.
 
-Download the dataset and start the dev server:
+Install dependencies, download the dataset, and start the dev server:
 ```
+pnpm install
 pnpm download-data
 pnpm dev
 ```
 
 Or build the full static site:
 ```
+pnpm install
 pnpm build
 ```
 

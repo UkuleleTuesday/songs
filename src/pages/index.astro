@@ -85,6 +85,15 @@ const base = import.meta.env.BASE_URL; // used for static asset paths in templat
       </select>
     </div>
 
+    <!-- Sort by -->
+    <div class="filter-group">
+      <label for="sort-by">Sort by</label>
+      <select id="sort-by" aria-label="Sort songs">
+        <option value="title">Title (A–Z)</option>
+        <option value="last-added">Last added</option>
+      </select>
+    </div>
+
     <button class="btn-clear" id="btn-clear" aria-label="Clear all filters">✕ Clear</button>
   </div>
 

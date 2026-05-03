@@ -117,7 +117,35 @@ function getFilters() {
     query:      document.getElementById('search').value.trim(),
     difficulty: document.getElementById('filter-difficulty').value,
     book:       document.getElementById('filter-book').value,
+    sort:       document.getElementById('sort-by').value,
   };
+}
+
+function getEffectiveDate(song) {
+  const p = song.properties || {};
+  const raw = p.ready_to_play_date || p.date;
+  if (!raw) return null;
+  const d = new Date(raw);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function sortSongs(songs, sortBy) {
+  if (sortBy === 'last-added') {
+    return [...songs].sort((a, b) => {
+      const da = getEffectiveDate(a);
+      const db = getEffectiveDate(b);
+      if (da && db) return db - da;
+      if (da) return -1;
+      if (db) return 1;
+      return 0;
+    });
+  }
+  // default: title A–Z
+  return [...songs].sort((a, b) => {
+    const sa = ((a.properties || {}).song || a.name || '').toLowerCase();
+    const sb = ((b.properties || {}).song || b.name || '').toLowerCase();
+    return sa < sb ? -1 : sa > sb ? 1 : 0;
+  });
 }
 
 function renderCard(song) {
@@ -183,16 +211,17 @@ let lunrIndex = null;
 function render() {
   const filters  = getFilters();
   const filtered = applyFilters(allSongs, lunrIndex, allSongs, filters);
+  const sorted   = sortSongs(filtered, filters.sort);
 
   document.getElementById('result-count').innerHTML =
-    `Showing <strong>${filtered.length.toLocaleString()}</strong> of
+    `Showing <strong>${sorted.length.toLocaleString()}</strong> of
      <strong>${allSongs.length.toLocaleString()}</strong> songs`;
 
   const container = document.getElementById('results');
-  if (filtered.length === 0) {
+  if (sorted.length === 0) {
     container.innerHTML = '<div class="no-results">No songs match your search. Try different terms or clear the filters.</div>';
   } else {
-    container.innerHTML = filtered.map(s => renderCard(s)).join('');
+    container.innerHTML = sorted.map(s => renderCard(s)).join('');
   }
 }
 
@@ -201,12 +230,6 @@ function render() {
 async function init() {
   try {
     allSongs = await fetchSongs();
-
-    allSongs.sort((a, b) => {
-      const sa = ((a.properties || {}).song || a.name || '').toLowerCase();
-      const sb = ((b.properties || {}).song || b.name || '').toLowerCase();
-      return sa < sb ? -1 : sa > sb ? 1 : 0;
-    });
 
     lunrIndex = buildIndex(allSongs);
 
@@ -231,11 +254,13 @@ async function init() {
 document.getElementById('search').addEventListener('input', render);
 document.getElementById('filter-difficulty').addEventListener('change', render);
 document.getElementById('filter-book').addEventListener('change', render);
+document.getElementById('sort-by').addEventListener('change', render);
 
 document.getElementById('btn-clear').addEventListener('click', () => {
   document.getElementById('search').value           = '';
   document.getElementById('filter-difficulty').value = '';
   document.getElementById('filter-book').value      = '';
+  document.getElementById('sort-by').value          = 'title';
   render();
 });
 

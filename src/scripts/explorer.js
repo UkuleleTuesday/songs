@@ -126,7 +126,7 @@ function getEffectiveDate(song) {
   const raw = p.ready_to_play_date || p.date;
   if (!raw) return null;
   const d = new Date(raw);
-  return isNaN(d) ? null : d;
+  return isNaN(d.getTime()) ? null : d;
 }
 
 function sortSongs(songs, sortBy) {

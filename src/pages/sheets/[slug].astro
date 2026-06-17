@@ -1,7 +1,7 @@
 ---
 import fs from 'node:fs';
 import path from 'node:path';
-import { slugify, difficultyBand, difficultyLabel, escHtml, buildBadges, renderBadge } from '../../utils/utils.js';
+import { slugify, difficultyBand, difficultyLabel, escHtml, buildBadges, renderBadge, parseTags, renderTag } from '../../utils/utils.js';
 import '../../styles/styles.css';
 
 export async function getStaticPaths() {
@@ -66,6 +66,10 @@ function generateMetadataRows(p) {
 
   if (p.year)     rows.push(metaRow('Year',     escHtml(p.year)));
   if (p.language) rows.push(metaRow('Language', escHtml(p.language)));
+
+  const tags = parseTags(p);
+  if (tags.length) rows.push(metaRow('Tags',
+    `<span class="card-chips">${tags.map(t => renderTag(t)).join('')}</span>`));
 
   return rows.length ? `<div class="song-meta">${rows.join('')}</div>` : '';
 }

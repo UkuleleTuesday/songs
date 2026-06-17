@@ -67,24 +67,6 @@ const base = import.meta.env.BASE_URL; // used for static asset paths in templat
       </select>
     </div>
 
-    <!-- Songbook filter -->
-    <div class="filter-group">
-      <label for="filter-book">Songbook</label>
-      <select id="filter-book" aria-label="Filter by songbook">
-        <option value="">All songbooks</option>
-        <option value="regular">Regular</option>
-        <option value="usa">USA</option>
-        <option value="uk">UK</option>
-        <option value="ireland">Ireland</option>
-        <option value="pride">Pride</option>
-        <option value="valentines">Valentine's</option>
-        <option value="womens">Women's</option>
-        <option value="halloween">Halloween</option>
-        <option value="xmas">Christmas</option>
-        <option value="hooley-2025">Hooley 2025</option>
-      </select>
-    </div>
-
     <!-- Sort by -->
     <div class="filter-group">
       <label for="sort-by">Sort by</label>
@@ -95,6 +77,12 @@ const base = import.meta.env.BASE_URL; // used for static asset paths in templat
     </div>
 
     <button class="btn-clear" id="btn-clear" aria-label="Clear all filters">✕ Clear</button>
+
+    <!-- Tag filter (emoji pills, populated at runtime from the dataset) -->
+    <div class="filter-group filter-group-tags">
+      <label id="tag-filter-label">Tags</label>
+      <div id="tag-filter" class="tag-filter" role="group" aria-labelledby="tag-filter-label"></div>
+    </div>
   </div>
 
   <div class="stats-bar">

@@ -83,11 +83,13 @@ export function renderBadge(badge, { iconOnly = false } = {}) {
 }
 
 // ── Tags (formerly "specialbooks") ──────────────────────────────────────────
-// Themed/seasonal collections a song can belong to. Source data lives in the
-// comma-separated `properties.specialbooks` field. Insertion order here is the
-// display order of the filter pills.
+// Themed/seasonal/regional collections a song can belong to. Source data lives
+// in the comma-separated `properties.specialbooks` field. Insertion order here
+// is the display order of the filter pills. Keys must match the raw tag value
+// exactly (lowercased, spaces preserved), e.g. 'new zealand', 'puerto rico'.
 
 export const TAG_DEFS = {
+  // Themed / seasonal collections.
   usa:        { id: 'usa',        emoji: '🇺🇸', label: 'USA' },
   uk:         { id: 'uk',         emoji: '🇬🇧', label: 'UK' },
   ireland:    { id: 'ireland',    emoji: '☘️',  label: 'Ireland' },
@@ -96,6 +98,26 @@ export const TAG_DEFS = {
   womens:     { id: 'womens',     emoji: '♀️',  label: "Women's" },
   halloween:  { id: 'halloween',  emoji: '🎃',  label: 'Halloween' },
   xmas:       { id: 'xmas',       emoji: '🎄',  label: 'Christmas' },
+  // Country / region collections (mostly the collapsed long tail).
+  canada:        { id: 'canada',        emoji: '🇨🇦', label: 'Canada' },
+  france:        { id: 'france',        emoji: '🇫🇷', label: 'France' },
+  italy:         { id: 'italy',         emoji: '🇮🇹', label: 'Italy' },
+  australia:     { id: 'australia',     emoji: '🇦🇺', label: 'Australia' },
+  sweden:        { id: 'sweden',        emoji: '🇸🇪', label: 'Sweden' },
+  scotland:      { id: 'scotland',      emoji: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', label: 'Scotland' },
+  scottish:      { id: 'scottish',      emoji: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', label: 'Scottish' },
+  peace:         { id: 'peace',         emoji: '☮️',  label: 'Peace' },
+  hawaii:        { id: 'hawaii',        emoji: '🌺', label: 'Hawaii' },
+  japan:         { id: 'japan',         emoji: '🇯🇵', label: 'Japan' },
+  'puerto rico': { id: 'puerto rico',   emoji: '🇵🇷', label: 'Puerto Rico' },
+  spain:         { id: 'spain',         emoji: '🇪🇸', label: 'Spain' },
+  wales:         { id: 'wales',         emoji: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', label: 'Wales' },
+  colombia:      { id: 'colombia',      emoji: '🇨🇴', label: 'Colombia' },
+  germany:       { id: 'germany',       emoji: '🇩🇪', label: 'Germany' },
+  netherlands:   { id: 'netherlands',   emoji: '🇳🇱', label: 'Netherlands' },
+  'new zealand': { id: 'new zealand',   emoji: '🇳🇿', label: 'New Zealand' },
+  norway:        { id: 'norway',        emoji: '🇳🇴', label: 'Norway' },
+  russia:        { id: 'russia',        emoji: '🇷🇺', label: 'Russia' },
 };
 
 // Tags present in the data but deliberately not surfaced in the UI:

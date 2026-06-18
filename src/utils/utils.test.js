@@ -8,6 +8,10 @@ import {
   buildBadges,
   renderBadge,
   BADGE_DEFS,
+  TAG_DEFS,
+  getTag,
+  parseTags,
+  renderTag,
 } from './utils.js';
 
 // ── slugify ────────────────────────────────────────────────────────────────
@@ -182,5 +186,70 @@ describe('renderBadge', () => {
     const html = renderBadge(BADGE_DEFS.wip);
     expect(html).toContain('title=');
     expect(html).toContain('not yet final');
+  });
+});
+
+// ── getTag ─────────────────────────────────────────────────────────────────
+
+describe('getTag', () => {
+  it('returns the known def for a recognised id', () => {
+    expect(getTag('halloween')).toBe(TAG_DEFS.halloween);
+  });
+
+  it('synthesizes a default for unknown ids', () => {
+    const tag = getTag('summer-2026');
+    expect(tag.id).toBe('summer-2026');
+    expect(tag.emoji).toBe('🏷️');
+    expect(tag.label).toBe('Summer 2026');
+  });
+});
+
+// ── parseTags ──────────────────────────────────────────────────────────────
+
+describe('parseTags', () => {
+  it('splits the comma-separated specialbooks field', () => {
+    expect(parseTags({ specialbooks: 'pride,halloween' })).toEqual(['pride', 'halloween']);
+  });
+
+  it('trims whitespace and drops empties', () => {
+    expect(parseTags({ specialbooks: ' pride , , xmas ' })).toEqual(['pride', 'xmas']);
+  });
+
+  it('filters out hidden tags (regular, hooley-2025)', () => {
+    expect(parseTags({ specialbooks: 'regular,pride,hooley-2025' })).toEqual(['pride']);
+  });
+
+  it('returns an empty array for missing or empty input', () => {
+    expect(parseTags({})).toEqual([]);
+    expect(parseTags(null)).toEqual([]);
+    expect(parseTags({ specialbooks: '' })).toEqual([]);
+    expect(parseTags({ specialbooks: 'regular' })).toEqual([]);
+  });
+});
+
+// ── renderTag ──────────────────────────────────────────────────────────────
+
+describe('renderTag', () => {
+  it('renders emoji and label by default', () => {
+    const html = renderTag('halloween');
+    expect(html).toContain('🎃');
+    expect(html).toContain('Halloween');
+    expect(html).toContain('chip-tag');
+  });
+
+  it('renders emoji only as content when iconOnly is true', () => {
+    const html = renderTag('halloween', { iconOnly: true });
+    // label still appears in the title attribute, but not in the visible content
+    expect(html).toContain('>🎃</span>');
+  });
+
+  it('uses the label as the title attribute', () => {
+    expect(renderTag('pride')).toContain('title="Pride"');
+  });
+
+  it('escapes unknown ids in the title attribute', () => {
+    const html = renderTag('<x>');
+    expect(html).toContain('&lt;x&gt;');
+    expect(html).not.toContain('<x>');
   });
 });

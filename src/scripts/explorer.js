@@ -6,6 +6,10 @@ import {
   escHtml,
   buildBadges,
   renderBadge,
+  TAG_DEFS,
+  getTag,
+  parseTags,
+  renderTag,
 } from '../utils/utils.js';
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
@@ -87,11 +91,10 @@ function applyFilters(songs, lunrIndex, allSongs, filters) {
     });
   }
 
-  if (filters.book) {
+  if (filters.tags.length) {
     result = result.filter(s => {
-      const books = ((s.properties || {}).specialbooks || '')
-        .split(',').map(b => b.trim());
-      return books.includes(filters.book);
+      const tags = parseTags(s.properties || {});
+      return filters.tags.some(t => tags.includes(t));
     });
   }
 
@@ -116,7 +119,7 @@ function getFilters() {
   return {
     query:      document.getElementById('search').value.trim(),
     difficulty: document.getElementById('filter-difficulty').value,
-    book:       document.getElementById('filter-book').value,
+    tags:       [...activeTags],
     sort:       document.getElementById('sort-by').value,
   };
 }
@@ -164,7 +167,10 @@ function renderCard(song) {
     ? `<span class="chip chip-neutral">${escHtml(p.year)}</span>`
     : '';
 
-  const chips = buildBadges(p).map(b => renderBadge(b, { iconOnly: true })).join('') + diffChip + yearChip;
+  const tagChips = parseTags(p).map(t => renderTag(t)).join('');
+
+  const chips = buildBadges(p).map(b => renderBadge(b, { iconOnly: true })).join('')
+    + diffChip + yearChip + tagChips;
 
   const chordsHtml = p.chords
     ? `<div class="card-chords" title="${escHtml(p.chords)}">${escHtml(p.chords)}</div>`
@@ -207,6 +213,27 @@ function renderCard(song) {
 
 let allSongs  = [];
 let lunrIndex = null;
+const activeTags = new Set();
+
+// Build the emoji tag pills from the tags actually present in the dataset,
+// ordered by TAG_DEFS (known tags first), then any unknown ones alphabetically.
+function renderTagPills(songs) {
+  const present = new Set();
+  songs.forEach(s => parseTags(s.properties || {}).forEach(t => present.add(t)));
+
+  const known   = Object.keys(TAG_DEFS).filter(id => present.has(id));
+  const unknown = [...present].filter(id => !(id in TAG_DEFS)).sort();
+  const ordered = [...known, ...unknown];
+
+  const container = document.getElementById('tag-filter');
+  if (!container) return;
+
+  container.innerHTML = ordered.map(id => {
+    const tag = getTag(id);
+    return `<button type="button" class="tag-pill" data-tag="${escHtml(id)}" aria-pressed="false">`
+      + `${escHtml(tag.emoji)} ${escHtml(tag.label)}</button>`;
+  }).join('');
+}
 
 function render() {
   const filters  = getFilters();
@@ -233,6 +260,8 @@ async function init() {
 
     lunrIndex = buildIndex(allSongs);
 
+    renderTagPills(allSongs);
+
     document.getElementById('loading').hidden = true;
     document.getElementById('header-count-inline').textContent =
       allSongs.length.toLocaleString();
@@ -253,14 +282,28 @@ async function init() {
 
 document.getElementById('search').addEventListener('input', render);
 document.getElementById('filter-difficulty').addEventListener('change', render);
-document.getElementById('filter-book').addEventListener('change', render);
 document.getElementById('sort-by').addEventListener('change', render);
+
+document.getElementById('tag-filter').addEventListener('click', (e) => {
+  const pill = e.target.closest('.tag-pill');
+  if (!pill) return;
+  const tag = pill.dataset.tag;
+  const active = !activeTags.has(tag);
+  if (active) activeTags.add(tag); else activeTags.delete(tag);
+  pill.classList.toggle('active', active);
+  pill.setAttribute('aria-pressed', String(active));
+  render();
+});
 
 document.getElementById('btn-clear').addEventListener('click', () => {
   document.getElementById('search').value           = '';
   document.getElementById('filter-difficulty').value = '';
-  document.getElementById('filter-book').value      = '';
   document.getElementById('sort-by').value          = 'title';
+  activeTags.clear();
+  document.querySelectorAll('.tag-pill.active').forEach(p => {
+    p.classList.remove('active');
+    p.setAttribute('aria-pressed', 'false');
+  });
   render();
 });
 

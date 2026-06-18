@@ -81,3 +81,49 @@ export function renderBadge(badge, { iconOnly = false } = {}) {
   const content = iconOnly ? escHtml(badge.icon) : `${escHtml(badge.icon)} ${escHtml(badge.label)}`;
   return `<span class="chip chip-${escHtml(badge.id)}" title="${escHtml(badge.tooltip)}">${content}</span>`;
 }
+
+// ── Tags (formerly "specialbooks") ──────────────────────────────────────────
+// Themed/seasonal collections a song can belong to. Source data lives in the
+// comma-separated `properties.specialbooks` field. Insertion order here is the
+// display order of the filter pills.
+
+export const TAG_DEFS = {
+  usa:        { id: 'usa',        emoji: '🇺🇸', label: 'USA' },
+  uk:         { id: 'uk',         emoji: '🇬🇧', label: 'UK' },
+  ireland:    { id: 'ireland',    emoji: '☘️',  label: 'Ireland' },
+  pride:      { id: 'pride',      emoji: '🏳️‍🌈', label: 'Pride' },
+  valentines: { id: 'valentines', emoji: '💘',  label: "Valentine's" },
+  womens:     { id: 'womens',     emoji: '♀️',  label: "Women's" },
+  halloween:  { id: 'halloween',  emoji: '🎃',  label: 'Halloween' },
+  xmas:       { id: 'xmas',       emoji: '🎄',  label: 'Christmas' },
+};
+
+// Tags present in the data but deliberately not surfaced in the UI:
+// `regular` is the default (most songs) so adds no signal; `hooley-2025` is a
+// stale one-off event. They stay in the data and search index untouched.
+export const HIDDEN_TAGS = new Set(['regular', 'hooley-2025']);
+
+function humanizeTag(id) {
+  return String(id)
+    .split('-')
+    .map(w => w ? w[0].toUpperCase() + w.slice(1) : w)
+    .join(' ');
+}
+
+export function getTag(id) {
+  return TAG_DEFS[id] || { id, emoji: '🏷️', label: humanizeTag(id) };
+}
+
+export function parseTags(props) {
+  return ((props || {}).specialbooks || '')
+    .split(',')
+    .map(t => t.trim())
+    .filter(Boolean)
+    .filter(t => !HIDDEN_TAGS.has(t));
+}
+
+export function renderTag(id, { iconOnly = false } = {}) {
+  const tag = getTag(id);
+  const content = iconOnly ? escHtml(tag.emoji) : `${escHtml(tag.emoji)} ${escHtml(tag.label)}`;
+  return `<span class="chip chip-tag" title="${escHtml(tag.label)}">${content}</span>`;
+}

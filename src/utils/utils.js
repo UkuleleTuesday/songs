@@ -99,9 +99,10 @@ export const TAG_DEFS = {
 };
 
 // Tags present in the data but deliberately not surfaced in the UI:
-// `regular` is the default (most songs) so adds no signal; `hooley-2025` is a
-// stale one-off event. They stay in the data and search index untouched.
-export const HIDDEN_TAGS = new Set(['regular', 'hooley-2025']);
+// `regular` is the default (most songs) so adds no signal; `hooley-2025`,
+// `womens-2026` and `can2025` are stale one-off / artifact values. They stay
+// in the data and search index untouched.
+export const HIDDEN_TAGS = new Set(['regular', 'hooley-2025', 'womens-2026', 'can2025']);
 
 function humanizeTag(id) {
   return String(id)

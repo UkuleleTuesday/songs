@@ -215,8 +215,9 @@ describe('parseTags', () => {
     expect(parseTags({ specialbooks: ' pride , , xmas ' })).toEqual(['pride', 'xmas']);
   });
 
-  it('filters out hidden tags (regular, hooley-2025)', () => {
+  it('filters out hidden tags (regular, hooley-2025, womens-2026, can2025)', () => {
     expect(parseTags({ specialbooks: 'regular,pride,hooley-2025' })).toEqual(['pride']);
+    expect(parseTags({ specialbooks: 'womens-2026,pride,can2025' })).toEqual(['pride']);
   });
 
   it('returns an empty array for missing or empty input', () => {

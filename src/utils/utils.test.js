@@ -230,6 +230,7 @@ describe('parseTags', () => {
     expect(parseTags({ specialbooks: 'regular,pride,hooley-2025' })).toEqual(['pride']);
     expect(parseTags({ specialbooks: 'womens-2026,pride,can2025' })).toEqual(['pride']);
     expect(parseTags({ specialbooks: 'nocan2025,pride' })).toEqual(['pride']);
+    expect(parseTags({ specialbooks: 'pride.uk,pride' })).toEqual(['pride']);
   });
 
   it('returns an empty array for missing or empty input', () => {

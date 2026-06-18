@@ -122,10 +122,11 @@ export const TAG_DEFS = {
 
 // Tags present in the data but deliberately not surfaced in the UI:
 // `regular` is the default (most songs) so adds no signal; `hooley-2025`,
-// `womens-2026`, `can2025` and `nocan2025` are stale one-off / artifact values.
-// They stay in the data and search index untouched.
+// `womens-2026`, `can2025` and `nocan2025` are stale one-off / artifact values;
+// `pride.uk` is a single-song variant of the `pride` collection. They stay in
+// the data and search index untouched.
 export const HIDDEN_TAGS = new Set([
-  'regular', 'hooley-2025', 'womens-2026', 'can2025', 'nocan2025',
+  'regular', 'hooley-2025', 'womens-2026', 'can2025', 'nocan2025', 'pride.uk',
 ]);
 
 function humanizeTag(id) {

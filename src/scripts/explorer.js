@@ -10,6 +10,7 @@ import {
   getTag,
   parseTags,
   renderTag,
+  splitTagsByThreshold,
 } from '../utils/utils.js';
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
@@ -217,22 +218,39 @@ const activeTags = new Set();
 
 // Build the emoji tag pills from the tags actually present in the dataset,
 // ordered by TAG_DEFS (known tags first), then any unknown ones alphabetically.
+// Popular tags (matching more than TAG_PILL_MIN_COUNT songs) show by default;
+// the long tail is collapsed behind a "More" toggle.
 function renderTagPills(songs) {
-  const present = new Set();
-  songs.forEach(s => parseTags(s.properties || {}).forEach(t => present.add(t)));
+  const counts = new Map();
+  songs.forEach(s => parseTags(s.properties || {}).forEach(t => {
+    counts.set(t, (counts.get(t) || 0) + 1);
+  }));
 
-  const known   = Object.keys(TAG_DEFS).filter(id => present.has(id));
-  const unknown = [...present].filter(id => !(id in TAG_DEFS)).sort();
+  const known   = Object.keys(TAG_DEFS).filter(id => counts.has(id));
+  const unknown = [...counts.keys()].filter(id => !(id in TAG_DEFS)).sort();
   const ordered = [...known, ...unknown];
 
   const container = document.getElementById('tag-filter');
   if (!container) return;
 
-  container.innerHTML = ordered.map(id => {
+  const [shown, hidden] = splitTagsByThreshold(ordered, counts);
+
+  const pill = (id, extra = '') => {
     const tag = getTag(id);
-    return `<button type="button" class="tag-pill" data-tag="${escHtml(id)}" aria-pressed="false">`
+    return `<button type="button" class="tag-pill${extra}" data-tag="${escHtml(id)}" aria-pressed="false">`
       + `${escHtml(tag.emoji)} ${escHtml(tag.label)}</button>`;
-  }).join('');
+  };
+
+  let html = shown.map(id => pill(id)).join('');
+  if (hidden.length) {
+    html += `<button type="button" id="tag-more" class="tag-more" aria-expanded="false">`
+      + `+${hidden.length} more</button>`;
+    html += hidden.map(id => pill(id, ' tag-overflow-item')).join('');
+    container.classList.add('overflow-collapsed');
+  } else {
+    container.classList.remove('overflow-collapsed');
+  }
+  container.innerHTML = html;
 }
 
 function render() {
@@ -285,6 +303,17 @@ document.getElementById('filter-difficulty').addEventListener('change', render);
 document.getElementById('sort-by').addEventListener('change', render);
 
 document.getElementById('tag-filter').addEventListener('click', (e) => {
+  const more = e.target.closest('.tag-more');
+  if (more) {
+    const container = document.getElementById('tag-filter');
+    const collapsed = container.classList.toggle('overflow-collapsed');
+    more.setAttribute('aria-expanded', String(!collapsed));
+    more.textContent = collapsed
+      ? `+${container.querySelectorAll('.tag-overflow-item').length} more`
+      : 'Show less';
+    return;
+  }
+
   const pill = e.target.closest('.tag-pill');
   if (!pill) return;
   const tag = pill.dataset.tag;

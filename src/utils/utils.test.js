@@ -12,6 +12,7 @@ import {
   getTag,
   parseTags,
   renderTag,
+  splitTagsByThreshold,
 } from './utils.js';
 
 // ── slugify ────────────────────────────────────────────────────────────────
@@ -215,9 +216,10 @@ describe('parseTags', () => {
     expect(parseTags({ specialbooks: ' pride , , xmas ' })).toEqual(['pride', 'xmas']);
   });
 
-  it('filters out hidden tags (regular, hooley-2025, womens-2026, can2025)', () => {
+  it('filters out hidden tags (regular, hooley-2025, womens-2026, can2025, nocan2025)', () => {
     expect(parseTags({ specialbooks: 'regular,pride,hooley-2025' })).toEqual(['pride']);
     expect(parseTags({ specialbooks: 'womens-2026,pride,can2025' })).toEqual(['pride']);
+    expect(parseTags({ specialbooks: 'nocan2025,pride' })).toEqual(['pride']);
   });
 
   it('returns an empty array for missing or empty input', () => {
@@ -252,5 +254,48 @@ describe('renderTag', () => {
     const html = renderTag('<x>');
     expect(html).toContain('&lt;x&gt;');
     expect(html).not.toContain('<x>');
+  });
+});
+
+// ── splitTagsByThreshold ─────────────────────────────────────────────────────
+
+describe('splitTagsByThreshold', () => {
+  const counts = new Map([['usa', 119], ['pride', 68], ['canada', 12], ['italy', 8], ['wales', 2]]);
+  const ordered = ['usa', 'pride', 'canada', 'italy', 'wales'];
+
+  it('shows tags above the threshold and hides the rest, preserving order', () => {
+    const [shown, hidden] = splitTagsByThreshold(ordered, counts, 10);
+    expect(shown).toEqual(['usa', 'pride', 'canada']);
+    expect(hidden).toEqual(['italy', 'wales']);
+  });
+
+  it('treats the threshold as strict (count must exceed min)', () => {
+    const [shown, hidden] = splitTagsByThreshold(['a', 'b'], new Map([['a', 10], ['b', 11]]), 10);
+    expect(shown).toEqual(['b']);
+    expect(hidden).toEqual(['a']);
+  });
+
+  it('shows everything when no tag clears the threshold', () => {
+    const [shown, hidden] = splitTagsByThreshold(['italy', 'wales'], counts, 10);
+    expect(shown).toEqual(['italy', 'wales']);
+    expect(hidden).toEqual([]);
+  });
+
+  it('produces no hidden group when all tags clear the threshold', () => {
+    const [shown, hidden] = splitTagsByThreshold(['usa', 'pride'], counts, 10);
+    expect(shown).toEqual(['usa', 'pride']);
+    expect(hidden).toEqual([]);
+  });
+
+  it('defaults missing counts to zero', () => {
+    const [shown, hidden] = splitTagsByThreshold(['usa', 'ghost'], counts, 10);
+    expect(shown).toEqual(['usa']);
+    expect(hidden).toEqual(['ghost']);
+  });
+
+  it('accepts a plain object for counts', () => {
+    const [shown, hidden] = splitTagsByThreshold(['usa', 'italy'], { usa: 119, italy: 8 }, 10);
+    expect(shown).toEqual(['usa']);
+    expect(hidden).toEqual(['italy']);
   });
 });

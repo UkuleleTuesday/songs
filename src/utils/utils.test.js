@@ -203,6 +203,16 @@ describe('getTag', () => {
     expect(tag.emoji).toBe('🏷️');
     expect(tag.label).toBe('Summer 2026');
   });
+
+  it('resolves country tags to a flag emoji instead of the fallback', () => {
+    expect(getTag('canada').emoji).toBe('🇨🇦');
+    expect(getTag('france').emoji).not.toBe('🏷️');
+  });
+
+  it('matches space-containing tag ids exactly', () => {
+    expect(getTag('new zealand').label).toBe('New Zealand');
+    expect(getTag('puerto rico').emoji).toBe('🇵🇷');
+  });
 });
 
 // ── parseTags ──────────────────────────────────────────────────────────────

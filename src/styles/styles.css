@@ -200,6 +200,33 @@
       outline-offset: 1px;
     }
 
+    /* Collapsed long-tail tags stay hidden until "More" is toggled. */
+    .tag-filter.overflow-collapsed .tag-overflow-item {
+      display: none;
+    }
+
+    .tag-more {
+      padding: 5px 11px;
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      background: transparent;
+      color: var(--primary);
+      font-size: 0.82rem;
+      line-height: 1.2;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tag-more:hover {
+      border-color: var(--primary-light);
+      background: var(--bg);
+    }
+
+    .tag-more:focus-visible {
+      outline: 2px solid var(--primary-light);
+      outline-offset: 1px;
+    }
+
     /* ── Stats bar ── */
     .stats-bar {
       display: flex;

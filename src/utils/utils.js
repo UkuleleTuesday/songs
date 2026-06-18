@@ -99,9 +99,12 @@ export const TAG_DEFS = {
 };
 
 // Tags present in the data but deliberately not surfaced in the UI:
-// `regular` is the default (most songs) so adds no signal; `hooley-2025` is a
-// stale one-off event. They stay in the data and search index untouched.
-export const HIDDEN_TAGS = new Set(['regular', 'hooley-2025']);
+// `regular` is the default (most songs) so adds no signal; `hooley-2025`,
+// `womens-2026`, `can2025` and `nocan2025` are stale one-off / artifact values.
+// They stay in the data and search index untouched.
+export const HIDDEN_TAGS = new Set([
+  'regular', 'hooley-2025', 'womens-2026', 'can2025', 'nocan2025',
+]);
 
 function humanizeTag(id) {
   return String(id)
@@ -126,4 +129,19 @@ export function renderTag(id, { iconOnly = false } = {}) {
   const tag = getTag(id);
   const content = iconOnly ? escHtml(tag.emoji) : `${escHtml(tag.emoji)} ${escHtml(tag.label)}`;
   return `<span class="chip chip-tag" title="${escHtml(tag.label)}">${content}</span>`;
+}
+
+// Tags matching more than this many songs are shown as filter pills by default;
+// the rest are collapsed behind a "More" toggle to keep the filter row tidy.
+export const TAG_PILL_MIN_COUNT = 10;
+
+// Partition an ordered list of tag ids into [shown, hidden] for the filter
+// pills: tags whose song count exceeds `min` are shown, the rest are hidden
+// (collapsed). Order is preserved within each group. If no tag clears the
+// threshold, everything is shown so we never collapse the whole row.
+export function splitTagsByThreshold(orderedIds, counts, min = TAG_PILL_MIN_COUNT) {
+  const countOf = id => (counts instanceof Map ? counts.get(id) : counts[id]) || 0;
+  const shown = orderedIds.filter(id => countOf(id) > min);
+  if (shown.length === 0) return [orderedIds.slice(), []];
+  return [shown, orderedIds.filter(id => countOf(id) <= min)];
 }

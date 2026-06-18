@@ -154,6 +154,22 @@ export function renderTag(id, { iconOnly = false } = {}) {
   return `<span class="chip chip-tag" title="${escHtml(tag.label)}">${content}</span>`;
 }
 
+// ── Genres ───────────────────────────────────────────────────────────────────
+// Freeform comma-separated genre strings from `properties.genre`.
+
+export function parseGenres(props) {
+  return ((props || {}).genre || '')
+    .split(',')
+    .map(g => g.trim())
+    .filter(Boolean);
+}
+
+export function renderGenre(id, { iconOnly = false } = {}) {
+  void iconOnly; // genres have no emoji — always render as text
+  return `<span class="chip chip-genre">${escHtml(id)}</span>`;
+}
+
+// ── Tag / genre pill thresholds ───────────────────────────────────────────────
 // Tags matching more than this many songs are shown as filter pills by default;
 // the rest are collapsed behind a "More" toggle to keep the filter row tidy.
 export const TAG_PILL_MIN_COUNT = 10;

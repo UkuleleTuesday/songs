@@ -67,6 +67,12 @@ function generateMetadataRows(p) {
   if (p.year)     rows.push(metaRow('Year',     escHtml(p.year)));
   if (p.language) rows.push(metaRow('Language', escHtml(p.language)));
 
+  if (p.genre) {
+    const genreChips = p.genre.split(',').map(g => g.trim()).filter(Boolean)
+      .map(g => `<span class="chip chip-genre">${escHtml(g)}</span>`).join('');
+    rows.push(metaRow('Genre', `<span class="card-chips">${genreChips}</span>`));
+  }
+
   const tags = parseTags(p);
   if (tags.length) rows.push(metaRow('Tags',
     `<span class="card-chips">${tags.map(t => renderTag(t)).join('')}</span>`));

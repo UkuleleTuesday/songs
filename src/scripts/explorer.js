@@ -10,6 +10,8 @@ import {
   getTag,
   parseTags,
   renderTag,
+  parseGenres,
+  renderGenre,
   splitTagsByThreshold,
 } from '../utils/utils.js';
 
@@ -33,6 +35,7 @@ function buildIndex(songs) {
     this.field('specialbooks', { boost: 2  });
     this.field('language');
     this.field('features');
+    this.field('genre',        { boost: 2  });
 
     songs.forEach(s => {
       const p = s.properties || {};
@@ -45,6 +48,7 @@ function buildIndex(songs) {
         specialbooks: (p.specialbooks || '').replace(/,/g, ' '),
         language:     p.language     || '',
         features:     p.features     || '',
+        genre:        (p.genre || '').replace(/,/g, ' '),
       });
     });
   });
@@ -99,6 +103,13 @@ function applyFilters(songs, lunrIndex, allSongs, filters) {
     });
   }
 
+  if (filters.genres.length) {
+    result = result.filter(s => {
+      const genres = parseGenres(s.properties || {});
+      return filters.genres.some(g => genres.includes(g));
+    });
+  }
+
   return result;
 }
 
@@ -121,6 +132,7 @@ function getFilters() {
     query:      document.getElementById('search').value.trim(),
     difficulty: document.getElementById('filter-difficulty').value,
     tags:       [...activeTags],
+    genres:     [...activeGenres],
     sort:       document.getElementById('sort-by').value,
   };
 }
@@ -168,10 +180,11 @@ function renderCard(song) {
     ? `<span class="chip chip-neutral">${escHtml(p.year)}</span>`
     : '';
 
-  const tagChips = parseTags(p).map(t => renderTag(t)).join('');
+  const tagChips   = parseTags(p).map(t => renderTag(t)).join('');
+  const genreChips = parseGenres(p).map(g => renderGenre(g)).join('');
 
   const chips = buildBadges(p).map(b => renderBadge(b, { iconOnly: true })).join('')
-    + diffChip + yearChip + tagChips;
+    + diffChip + yearChip + tagChips + genreChips;
 
   const chordsHtml = p.chords
     ? `<div class="card-chords" title="${escHtml(p.chords)}">${escHtml(p.chords)}</div>`
@@ -214,7 +227,8 @@ function renderCard(song) {
 
 let allSongs  = [];
 let lunrIndex = null;
-const activeTags = new Set();
+const activeTags   = new Set();
+const activeGenres = new Set();
 
 // Build the emoji tag pills from the tags actually present in the dataset,
 // ordered by TAG_DEFS (known tags first), then any unknown ones alphabetically.
@@ -253,6 +267,39 @@ function renderTagPills(songs) {
   container.innerHTML = html;
 }
 
+// Build genre filter pills ordered by frequency (most common first),
+// with the long tail collapsed behind a "More" toggle.
+function renderGenrePills(songs) {
+  const counts = new Map();
+  songs.forEach(s => parseGenres(s.properties || {}).forEach(g => {
+    counts.set(g, (counts.get(g) || 0) + 1);
+  }));
+
+  const container = document.getElementById('genre-filter');
+  if (!container) return;
+
+  const ordered = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([g]) => g);
+
+  const [shown, hidden] = splitTagsByThreshold(ordered, counts);
+
+  const pill = (id, extra = '') =>
+    `<button type="button" class="tag-pill genre-pill${extra}" data-genre="${escHtml(id)}" aria-pressed="false">`
+    + `${escHtml(id)}</button>`;
+
+  let html = shown.map(id => pill(id)).join('');
+  if (hidden.length) {
+    html += `<button type="button" id="genre-more" class="tag-more" aria-expanded="false">`
+      + `+${hidden.length} more</button>`;
+    html += hidden.map(id => pill(id, ' tag-overflow-item')).join('');
+    container.classList.add('overflow-collapsed');
+  } else {
+    container.classList.remove('overflow-collapsed');
+  }
+  container.innerHTML = html;
+}
+
 function render() {
   const filters  = getFilters();
   const filtered = applyFilters(allSongs, lunrIndex, allSongs, filters);
@@ -279,6 +326,7 @@ async function init() {
     lunrIndex = buildIndex(allSongs);
 
     renderTagPills(allSongs);
+    renderGenrePills(allSongs);
 
     document.getElementById('loading').hidden = true;
     document.getElementById('header-count-inline').textContent =
@@ -324,12 +372,35 @@ document.getElementById('tag-filter').addEventListener('click', (e) => {
   render();
 });
 
+document.getElementById('genre-filter').addEventListener('click', (e) => {
+  const more = e.target.closest('#genre-more');
+  if (more) {
+    const container = document.getElementById('genre-filter');
+    const collapsed = container.classList.toggle('overflow-collapsed');
+    more.setAttribute('aria-expanded', String(!collapsed));
+    more.textContent = collapsed
+      ? `+${container.querySelectorAll('.tag-overflow-item').length} more`
+      : 'Show less';
+    return;
+  }
+
+  const pill = e.target.closest('.genre-pill');
+  if (!pill) return;
+  const genre = pill.dataset.genre;
+  const active = !activeGenres.has(genre);
+  if (active) activeGenres.add(genre); else activeGenres.delete(genre);
+  pill.classList.toggle('active', active);
+  pill.setAttribute('aria-pressed', String(active));
+  render();
+});
+
 document.getElementById('btn-clear').addEventListener('click', () => {
   document.getElementById('search').value           = '';
   document.getElementById('filter-difficulty').value = '';
   document.getElementById('sort-by').value          = 'title';
   activeTags.clear();
-  document.querySelectorAll('.tag-pill.active').forEach(p => {
+  activeGenres.clear();
+  document.querySelectorAll('.tag-pill.active, .genre-pill.active').forEach(p => {
     p.classList.remove('active');
     p.setAttribute('aria-pressed', 'false');
   });

@@ -3,6 +3,7 @@ import {
   slugify,
   difficultyBand,
   difficultyLabel,
+  DIFFICULTY_BANDS,
   escHtml,
   buildBadges,
   renderBadge,
@@ -89,10 +90,10 @@ function applyFilters(songs, lunrIndex, allSongs, filters) {
     result = result.filter(s => hitIds.has(s.id));
   }
 
-  if (filters.difficulty) {
+  if (filters.difficulties.length) {
     result = result.filter(s => {
       const band = difficultyBand((s.properties || {}).difficulty);
-      return band === filters.difficulty;
+      return filters.difficulties.includes(band);
     });
   }
 
@@ -129,11 +130,11 @@ function pdfUrl(song) {
 
 function getFilters() {
   return {
-    query:      document.getElementById('search').value.trim(),
-    difficulty: document.getElementById('filter-difficulty').value,
-    tags:       [...activeTags],
-    genres:     [...activeGenres],
-    sort:       document.getElementById('sort-by').value,
+    query:        document.getElementById('search').value.trim(),
+    difficulties: [...activeDifficulties],
+    tags:         [...activeTags],
+    genres:       [...activeGenres],
+    sort:         document.getElementById('sort-by').value,
   };
 }
 
@@ -227,8 +228,9 @@ function renderCard(song) {
 
 let allSongs  = [];
 let lunrIndex = null;
-const activeTags   = new Set();
-const activeGenres = new Set();
+const activeTags         = new Set();
+const activeGenres       = new Set();
+const activeDifficulties = new Set();
 
 // Build the emoji tag pills from the tags actually present in the dataset,
 // ordered by TAG_DEFS (known tags first), then any unknown ones alphabetically.
@@ -300,6 +302,26 @@ function renderGenrePills(songs) {
   container.innerHTML = html;
 }
 
+// Build difficulty filter pills for the bands present in the dataset, ordered
+// from easiest to hardest. Multi-select like the tag and genre pills.
+function renderDifficultyPills(songs) {
+  const present = new Set();
+  songs.forEach(s => {
+    const band = difficultyBand((s.properties || {}).difficulty);
+    if (band) present.add(band);
+  });
+
+  const container = document.getElementById('difficulty-filter');
+  if (!container) return;
+
+  container.innerHTML = DIFFICULTY_BANDS
+    .filter(band => present.has(band))
+    .map(band =>
+      `<button type="button" class="tag-pill difficulty-pill" data-difficulty="${band}" aria-pressed="false">`
+      + `${escHtml(difficultyLabel(band))}</button>`)
+    .join('');
+}
+
 function render() {
   const filters  = getFilters();
   const filtered = applyFilters(allSongs, lunrIndex, allSongs, filters);
@@ -325,6 +347,7 @@ async function init() {
 
     lunrIndex = buildIndex(allSongs);
 
+    renderDifficultyPills(allSongs);
     renderTagPills(allSongs);
     renderGenrePills(allSongs);
 
@@ -347,8 +370,18 @@ async function init() {
 // ── Event listeners ───────────────────────────────────────────────────────────
 
 document.getElementById('search').addEventListener('input', render);
-document.getElementById('filter-difficulty').addEventListener('change', render);
 document.getElementById('sort-by').addEventListener('change', render);
+
+document.getElementById('difficulty-filter').addEventListener('click', (e) => {
+  const pill = e.target.closest('.difficulty-pill');
+  if (!pill) return;
+  const band = pill.dataset.difficulty;
+  const active = !activeDifficulties.has(band);
+  if (active) activeDifficulties.add(band); else activeDifficulties.delete(band);
+  pill.classList.toggle('active', active);
+  pill.setAttribute('aria-pressed', String(active));
+  render();
+});
 
 document.getElementById('tag-filter').addEventListener('click', (e) => {
   const more = e.target.closest('.tag-more');
@@ -395,12 +428,12 @@ document.getElementById('genre-filter').addEventListener('click', (e) => {
 });
 
 document.getElementById('btn-clear').addEventListener('click', () => {
-  document.getElementById('search').value           = '';
-  document.getElementById('filter-difficulty').value = '';
-  document.getElementById('sort-by').value          = 'title';
+  document.getElementById('search').value  = '';
+  document.getElementById('sort-by').value = 'title';
   activeTags.clear();
   activeGenres.clear();
-  document.querySelectorAll('.tag-pill.active, .genre-pill.active').forEach(p => {
+  activeDifficulties.clear();
+  document.querySelectorAll('.tag-pill.active, .genre-pill.active, .difficulty-pill.active').forEach(p => {
     p.classList.remove('active');
     p.setAttribute('aria-pressed', 'false');
   });

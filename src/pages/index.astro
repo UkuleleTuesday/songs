@@ -57,16 +57,6 @@ const base = import.meta.env.BASE_URL; // used for static asset paths in templat
     </div>
 
     <!-- Difficulty filter (calibrated to actual range: 0.81–5.03) -->
-    <div class="filter-group">
-      <label for="filter-difficulty">Difficulty</label>
-      <select id="filter-difficulty" aria-label="Filter by difficulty">
-        <option value="">All difficulties</option>
-        <option value="easy">Beginner</option>
-        <option value="medium">Intermediate</option>
-        <option value="hard">Advanced</option>
-      </select>
-    </div>
-
     <!-- Sort by -->
     <div class="filter-group">
       <label for="sort-by">Sort by</label>
@@ -77,6 +67,12 @@ const base = import.meta.env.BASE_URL; // used for static asset paths in templat
     </div>
 
     <button class="btn-clear" id="btn-clear" aria-label="Clear all filters">✕ Clear</button>
+
+    <!-- Difficulty filter (pills, populated at runtime from the dataset) -->
+    <div class="filter-group filter-group-tags">
+      <label id="difficulty-filter-label">Difficulty</label>
+      <div id="difficulty-filter" class="tag-filter" role="group" aria-labelledby="difficulty-filter-label"></div>
+    </div>
 
     <!-- Tag filter (emoji pills, populated at runtime from the dataset) -->
     <div class="filter-group filter-group-tags">

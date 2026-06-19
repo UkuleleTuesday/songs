@@ -3,6 +3,7 @@ import {
   slugify,
   difficultyBand,
   difficultyLabel,
+  DIFFICULTY_BANDS,
   escHtml,
   isNewSong,
   buildBadges,
@@ -95,6 +96,20 @@ describe('difficultyLabel', () => {
     expect(difficultyLabel(null)).toBeNull();
     expect(difficultyLabel(undefined)).toBeNull();
     expect(difficultyLabel('')).toBeNull();
+  });
+});
+
+// ── DIFFICULTY_BANDS ─────────────────────────────────────────────────────────
+
+describe('DIFFICULTY_BANDS', () => {
+  it('lists the bands from easiest to hardest', () => {
+    expect(DIFFICULTY_BANDS).toEqual(['easy', 'medium', 'hard']);
+  });
+
+  it('contains only bands that difficultyLabel recognises', () => {
+    DIFFICULTY_BANDS.forEach(band => {
+      expect(difficultyLabel(band)).not.toBeNull();
+    });
   });
 });
 

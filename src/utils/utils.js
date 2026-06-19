@@ -27,6 +27,9 @@ export function difficultyLabel(band) {
   return null;
 }
 
+// Difficulty bands in ascending order — the display order of the filter pills.
+export const DIFFICULTY_BANDS = ["easy", "medium", "hard"];
+
 export const STATUS_LABELS = {
   APPROVED:      "Approved",
   READY_TO_PLAY: "Ready to play",

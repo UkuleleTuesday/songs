@@ -7,10 +7,14 @@ import {
   escHtml,
   buildBadges,
   renderBadge,
-  TAG_DEFS,
-  getTag,
-  parseTags,
-  renderTag,
+  COUNTRY_DEFS,
+  getCountry,
+  parseCountry,
+  renderCountry,
+  THEME_DEFS,
+  getTheme,
+  parseTheme,
+  renderTheme,
   parseGenres,
   renderGenre,
   splitTagsByThreshold,
@@ -33,23 +37,25 @@ function buildIndex(songs) {
     this.field('artist',       { boost: 8  });
     this.field('chords',       { boost: 3  });
     this.field('tabber',       { boost: 2  });
-    this.field('specialbooks', { boost: 2  });
+    this.field('country',  { boost: 2  });
+    this.field('theme',    { boost: 2  });
     this.field('language');
     this.field('features');
-    this.field('genre',        { boost: 2  });
+    this.field('genre',    { boost: 2  });
 
     songs.forEach(s => {
       const p = s.properties || {};
       this.add({
-        id:           s.id,
-        song:         p.song         || '',
-        artist:       p.artist       || '',
-        chords:       (p.chords || '').replace(/,/g, ' '),
-        tabber:       p.tabber       || '',
-        specialbooks: (p.specialbooks || '').replace(/,/g, ' '),
-        language:     p.language     || '',
-        features:     p.features     || '',
-        genre:        (p.genre || '').replace(/,/g, ' '),
+        id:       s.id,
+        song:     p.song     || '',
+        artist:   p.artist   || '',
+        chords:   (p.chords || '').replace(/,/g, ' '),
+        tabber:   p.tabber   || '',
+        country:  (p.country || '').replace(/,/g, ' '),
+        theme:    (p.theme   || '').replace(/,/g, ' '),
+        language: p.language || '',
+        features: p.features || '',
+        genre:    (p.genre   || '').replace(/,/g, ' '),
       });
     });
   });
@@ -97,10 +103,17 @@ function applyFilters(songs, lunrIndex, allSongs, filters) {
     });
   }
 
-  if (filters.tags.length) {
+  if (filters.countries.length) {
     result = result.filter(s => {
-      const tags = parseTags(s.properties || {});
-      return filters.tags.some(t => tags.includes(t));
+      const countries = parseCountry(s.properties || {});
+      return filters.countries.some(c => countries.includes(c));
+    });
+  }
+
+  if (filters.themes.length) {
+    result = result.filter(s => {
+      const themes = parseTheme(s.properties || {});
+      return filters.themes.some(t => themes.includes(t));
     });
   }
 
@@ -132,7 +145,8 @@ function getFilters() {
   return {
     query:        document.getElementById('search').value.trim(),
     difficulties: [...activeDifficulties],
-    tags:         [...activeTags],
+    countries:    [...activeCountries],
+    themes:       [...activeThemes],
     genres:       [...activeGenres],
     sort:         document.getElementById('sort-by').value,
   };
@@ -181,11 +195,12 @@ function renderCard(song) {
     ? `<span class="chip chip-neutral">${escHtml(p.year)}</span>`
     : '';
 
-  const tagChips   = parseTags(p).map(t => renderTag(t)).join('');
-  const genreChips = parseGenres(p).map(g => renderGenre(g)).join('');
+  const countryChips = parseCountry(p).map(c => renderCountry(c)).join('');
+  const themeChips   = parseTheme(p).map(t => renderTheme(t)).join('');
+  const genreChips   = parseGenres(p).map(g => renderGenre(g)).join('');
 
   const chips = buildBadges(p).map(b => renderBadge(b, { iconOnly: true })).join('')
-    + diffChip + yearChip + tagChips + genreChips;
+    + diffChip + yearChip + themeChips + countryChips + genreChips;
 
   const chordsHtml = p.chords
     ? `<div class="card-chords" title="${escHtml(p.chords)}">${escHtml(p.chords)}</div>`
@@ -228,38 +243,37 @@ function renderCard(song) {
 
 let allSongs  = [];
 let lunrIndex = null;
-const activeTags         = new Set();
-const activeGenres       = new Set();
 const activeDifficulties = new Set();
+const activeCountries    = new Set();
+const activeThemes       = new Set();
+const activeGenres       = new Set();
 
-// Build the emoji tag pills from the tags actually present in the dataset,
-// ordered by TAG_DEFS (known tags first), then any unknown ones alphabetically.
-// Popular tags (matching more than TAG_PILL_MIN_COUNT songs) show by default;
-// the long tail is collapsed behind a "More" toggle.
-function renderTagPills(songs) {
+// Country pills: COUNTRY_DEFS order for known entries, then unknowns by frequency.
+// Popular ones show by default; long tail collapses behind "More".
+function renderCountryPills(songs) {
   const counts = new Map();
-  songs.forEach(s => parseTags(s.properties || {}).forEach(t => {
-    counts.set(t, (counts.get(t) || 0) + 1);
+  songs.forEach(s => parseCountry(s.properties || {}).forEach(c => {
+    counts.set(c, (counts.get(c) || 0) + 1);
   }));
 
-  const known   = Object.keys(TAG_DEFS).filter(id => counts.has(id));
-  const unknown = [...counts.keys()].filter(id => !(id in TAG_DEFS)).sort();
+  const known   = Object.keys(COUNTRY_DEFS).filter(id => counts.has(id));
+  const unknown = [...counts.keys()].filter(id => !(id in COUNTRY_DEFS)).sort();
   const ordered = [...known, ...unknown];
 
-  const container = document.getElementById('tag-filter');
+  const container = document.getElementById('country-filter');
   if (!container) return;
 
   const [shown, hidden] = splitTagsByThreshold(ordered, counts);
 
   const pill = (id, extra = '') => {
-    const tag = getTag(id);
-    return `<button type="button" class="tag-pill${extra}" data-tag="${escHtml(id)}" aria-pressed="false">`
-      + `${escHtml(tag.emoji)} ${escHtml(tag.label)}</button>`;
+    const c = getCountry(id);
+    return `<button type="button" class="tag-pill country-pill${extra}" data-country="${escHtml(id)}" aria-pressed="false">`
+      + `${escHtml(c.emoji)} ${escHtml(c.label)}</button>`;
   };
 
   let html = shown.map(id => pill(id)).join('');
   if (hidden.length) {
-    html += `<button type="button" id="tag-more" class="tag-more" aria-expanded="false">`
+    html += `<button type="button" id="country-more" class="tag-more" aria-expanded="false">`
       + `+${hidden.length} more</button>`;
     html += hidden.map(id => pill(id, ' tag-overflow-item')).join('');
     container.classList.add('overflow-collapsed');
@@ -267,6 +281,29 @@ function renderTagPills(songs) {
     container.classList.remove('overflow-collapsed');
   }
   container.innerHTML = html;
+}
+
+// Theme pills: THEME_DEFS order, all shown (only ~6 values so no collapse needed).
+function renderThemePills(songs) {
+  const counts = new Map();
+  songs.forEach(s => parseTheme(s.properties || {}).forEach(t => {
+    counts.set(t, (counts.get(t) || 0) + 1);
+  }));
+
+  const known   = Object.keys(THEME_DEFS).filter(id => counts.has(id));
+  const unknown = [...counts.keys()].filter(id => !(id in THEME_DEFS)).sort();
+  const ordered = [...known, ...unknown];
+
+  const container = document.getElementById('theme-filter');
+  if (!container) return;
+
+  const pill = (id) => {
+    const t = getTheme(id);
+    return `<button type="button" class="tag-pill theme-pill" data-theme="${escHtml(id)}" aria-pressed="false">`
+      + `${escHtml(t.emoji)} ${escHtml(t.label)}</button>`;
+  };
+
+  container.innerHTML = ordered.map(id => pill(id)).join('');
 }
 
 // Build genre filter pills ordered by frequency (most common first),
@@ -348,7 +385,8 @@ async function init() {
     lunrIndex = buildIndex(allSongs);
 
     renderDifficultyPills(allSongs);
-    renderTagPills(allSongs);
+    renderCountryPills(allSongs);
+    renderThemePills(allSongs);
     renderGenrePills(allSongs);
 
     document.getElementById('loading').hidden = true;
@@ -383,10 +421,10 @@ document.getElementById('difficulty-filter').addEventListener('click', (e) => {
   render();
 });
 
-document.getElementById('tag-filter').addEventListener('click', (e) => {
-  const more = e.target.closest('.tag-more');
+document.getElementById('country-filter').addEventListener('click', (e) => {
+  const more = e.target.closest('#country-more');
   if (more) {
-    const container = document.getElementById('tag-filter');
+    const container = document.getElementById('country-filter');
     const collapsed = container.classList.toggle('overflow-collapsed');
     more.setAttribute('aria-expanded', String(!collapsed));
     more.textContent = collapsed
@@ -395,11 +433,22 @@ document.getElementById('tag-filter').addEventListener('click', (e) => {
     return;
   }
 
-  const pill = e.target.closest('.tag-pill');
+  const pill = e.target.closest('.country-pill');
   if (!pill) return;
-  const tag = pill.dataset.tag;
-  const active = !activeTags.has(tag);
-  if (active) activeTags.add(tag); else activeTags.delete(tag);
+  const country = pill.dataset.country;
+  const active = !activeCountries.has(country);
+  if (active) activeCountries.add(country); else activeCountries.delete(country);
+  pill.classList.toggle('active', active);
+  pill.setAttribute('aria-pressed', String(active));
+  render();
+});
+
+document.getElementById('theme-filter').addEventListener('click', (e) => {
+  const pill = e.target.closest('.theme-pill');
+  if (!pill) return;
+  const theme = pill.dataset.theme;
+  const active = !activeThemes.has(theme);
+  if (active) activeThemes.add(theme); else activeThemes.delete(theme);
   pill.classList.toggle('active', active);
   pill.setAttribute('aria-pressed', String(active));
   render();
@@ -430,10 +479,11 @@ document.getElementById('genre-filter').addEventListener('click', (e) => {
 document.getElementById('btn-clear').addEventListener('click', () => {
   document.getElementById('search').value  = '';
   document.getElementById('sort-by').value = 'title';
-  activeTags.clear();
-  activeGenres.clear();
   activeDifficulties.clear();
-  document.querySelectorAll('.tag-pill.active, .genre-pill.active, .difficulty-pill.active').forEach(p => {
+  activeCountries.clear();
+  activeThemes.clear();
+  activeGenres.clear();
+  document.querySelectorAll('.difficulty-pill.active, .country-pill.active, .theme-pill.active, .genre-pill.active').forEach(p => {
     p.classList.remove('active');
     p.setAttribute('aria-pressed', 'false');
   });

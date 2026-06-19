@@ -85,76 +85,89 @@ export function renderBadge(badge, { iconOnly = false } = {}) {
   return `<span class="chip chip-${escHtml(badge.id)}" title="${escHtml(badge.tooltip)}">${content}</span>`;
 }
 
-// ── Tags (formerly "specialbooks") ──────────────────────────────────────────
-// Themed/seasonal/regional collections a song can belong to. Source data lives
-// in the comma-separated `properties.specialbooks` field. Insertion order here
-// is the display order of the filter pills. Keys must match the raw tag value
-// exactly (lowercased, spaces preserved), e.g. 'new zealand', 'puerto rico'.
+// ── Countries ─────────────────────────────────────────────────────────────────
+// Source: `properties.country` (comma-separated full country names, lowercase).
+// Insertion order sets the display order for filter pills; less-common countries
+// fall through to the "More" collapse automatically via splitTagsByThreshold.
 
-export const TAG_DEFS = {
-  // Themed / seasonal collections.
-  usa:        { id: 'usa',        emoji: '🇺🇸', label: 'USA' },
-  uk:         { id: 'uk',         emoji: '🇬🇧', label: 'UK' },
-  ireland:    { id: 'ireland',    emoji: '☘️',  label: 'Ireland' },
-  pride:      { id: 'pride',      emoji: '🏳️‍🌈', label: 'Pride' },
-  valentines: { id: 'valentines', emoji: '💘',  label: "Valentine's" },
-  womens:     { id: 'womens',     emoji: '♀️',  label: "Women's" },
-  halloween:  { id: 'halloween',  emoji: '🎃',  label: 'Halloween' },
-  xmas:       { id: 'xmas',       emoji: '🎄',  label: 'Christmas' },
-  // Country / region collections (mostly the collapsed long tail).
-  canada:        { id: 'canada',        emoji: '🇨🇦', label: 'Canada' },
-  france:        { id: 'france',        emoji: '🇫🇷', label: 'France' },
-  italy:         { id: 'italy',         emoji: '🇮🇹', label: 'Italy' },
-  australia:     { id: 'australia',     emoji: '🇦🇺', label: 'Australia' },
-  sweden:        { id: 'sweden',        emoji: '🇸🇪', label: 'Sweden' },
-  scotland:      { id: 'scotland',      emoji: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', label: 'Scotland' },
-  scottish:      { id: 'scottish',      emoji: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', label: 'Scottish' },
-  peace:         { id: 'peace',         emoji: '☮️',  label: 'Peace' },
-  hawaii:        { id: 'hawaii',        emoji: '🌺', label: 'Hawaii' },
-  japan:         { id: 'japan',         emoji: '🇯🇵', label: 'Japan' },
-  'puerto rico': { id: 'puerto rico',   emoji: '🇵🇷', label: 'Puerto Rico' },
-  spain:         { id: 'spain',         emoji: '🇪🇸', label: 'Spain' },
-  wales:         { id: 'wales',         emoji: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', label: 'Wales' },
-  colombia:      { id: 'colombia',      emoji: '🇨🇴', label: 'Colombia' },
-  germany:       { id: 'germany',       emoji: '🇩🇪', label: 'Germany' },
-  netherlands:   { id: 'netherlands',   emoji: '🇳🇱', label: 'Netherlands' },
-  'new zealand': { id: 'new zealand',   emoji: '🇳🇿', label: 'New Zealand' },
-  norway:        { id: 'norway',        emoji: '🇳🇴', label: 'Norway' },
-  russia:        { id: 'russia',        emoji: '🇷🇺', label: 'Russia' },
+export const COUNTRY_DEFS = {
+  'united states':      { emoji: '🇺🇸', label: 'United States' },
+  'united kingdom':     { emoji: '🇬🇧', label: 'United Kingdom' },
+  'ireland':            { emoji: '🇮🇪', label: 'Ireland' },
+  'canada':             { emoji: '🇨🇦', label: 'Canada' },
+  'england':            { emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', label: 'England' },
+  'france':             { emoji: '🇫🇷', label: 'France' },
+  'italy':              { emoji: '🇮🇹', label: 'Italy' },
+  'australia':          { emoji: '🇦🇺', label: 'Australia' },
+  'sweden':             { emoji: '🇸🇪', label: 'Sweden' },
+  'spain':              { emoji: '🇪🇸', label: 'Spain' },
+  'scotland':           { emoji: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', label: 'Scotland' },
+  'wales':              { emoji: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', label: 'Wales' },
+  'northern ireland':   { emoji: '🇬🇧', label: 'Northern Ireland' },
+  'germany':            { emoji: '🇩🇪', label: 'Germany' },
+  'netherlands':        { emoji: '🇳🇱', label: 'Netherlands' },
+  'norway':             { emoji: '🇳🇴', label: 'Norway' },
+  'new zealand':        { emoji: '🇳🇿', label: 'New Zealand' },
+  'puerto rico':        { emoji: '🇵🇷', label: 'Puerto Rico' },
+  'hawaii':             { emoji: '🌺',  label: 'Hawaii' },
+  'colombia':           { emoji: '🇨🇴', label: 'Colombia' },
+  'austria':            { emoji: '🇦🇹', label: 'Austria' },
+  'belgium':            { emoji: '🇧🇪', label: 'Belgium' },
+  'jamaica':            { emoji: '🇯🇲', label: 'Jamaica' },
+  'japan':              { emoji: '🇯🇵', label: 'Japan' },
+  'lebanon':            { emoji: '🇱🇧', label: 'Lebanon' },
+  'russian federation': { emoji: '🇷🇺', label: 'Russia' },
+  'south africa':       { emoji: '🇿🇦', label: 'South Africa' },
+  'switzerland':        { emoji: '🇨🇭', label: 'Switzerland' },
+  'zimbabwe':           { emoji: '🇿🇼', label: 'Zimbabwe' },
 };
 
-// Tags present in the data but deliberately not surfaced in the UI:
-// `regular` is the default (most songs) so adds no signal; `hooley-2025`,
-// `womens-2026`, `can2025` and `nocan2025` are stale one-off / artifact values;
-// `pride.uk` is a single-song variant of the `pride` collection. They stay in
-// the data and search index untouched.
-export const HIDDEN_TAGS = new Set([
-  'regular', 'hooley-2025', 'womens-2026', 'can2025', 'nocan2025', 'pride.uk',
-]);
+// ── Themes ────────────────────────────────────────────────────────────────────
+// Source: `properties.theme` (comma-separated theme slugs). Insertion order
+// sets the display order of the filter pills.
 
-function humanizeTag(id) {
+export const THEME_DEFS = {
+  valentines: { emoji: '💘',    label: "Valentine's" },
+  pride:      { emoji: '🏳️‍🌈', label: 'Pride' },
+  halloween:  { emoji: '🎃',    label: 'Halloween' },
+  christmas:  { emoji: '🎄',    label: 'Christmas' },
+  peace:      { emoji: '☮️',   label: 'Peace' },
+  birthday:   { emoji: '🎂',    label: 'Birthday' },
+};
+
+function humanizeId(id) {
   return String(id)
-    .split('-')
+    .split(/[-\s]+/)
     .map(w => w ? w[0].toUpperCase() + w.slice(1) : w)
     .join(' ');
 }
 
-export function getTag(id) {
-  return TAG_DEFS[id] || { id, emoji: '🏷️', label: humanizeTag(id) };
+export function getCountry(id) {
+  const def = COUNTRY_DEFS[id];
+  return def ? { id, ...def } : { id, emoji: '🌍', label: humanizeId(id) };
 }
 
-export function parseTags(props) {
-  return ((props || {}).specialbooks || '')
-    .split(',')
-    .map(t => t.trim())
-    .filter(Boolean)
-    .filter(t => !HIDDEN_TAGS.has(t));
+export function getTheme(id) {
+  const def = THEME_DEFS[id];
+  return def ? { id, ...def } : { id, emoji: '🏷️', label: humanizeId(id) };
 }
 
-export function renderTag(id, { iconOnly = false } = {}) {
-  const tag = getTag(id);
-  const content = iconOnly ? escHtml(tag.emoji) : `${escHtml(tag.emoji)} ${escHtml(tag.label)}`;
-  return `<span class="chip chip-tag" title="${escHtml(tag.label)}">${content}</span>`;
+export function parseCountry(props) {
+  return ((props || {}).country || '').split(',').map(c => c.trim()).filter(Boolean);
+}
+
+export function parseTheme(props) {
+  return ((props || {}).theme || '').split(',').map(t => t.trim()).filter(Boolean);
+}
+
+export function renderCountry(id) {
+  const c = getCountry(id);
+  return `<span class="chip chip-country" title="${escHtml(c.label)}">${escHtml(c.emoji)} ${escHtml(c.label)}</span>`;
+}
+
+export function renderTheme(id) {
+  const t = getTheme(id);
+  return `<span class="chip chip-theme" title="${escHtml(t.label)}">${escHtml(t.emoji)} ${escHtml(t.label)}</span>`;
 }
 
 // ── Genres ───────────────────────────────────────────────────────────────────
@@ -172,8 +185,8 @@ export function renderGenre(id, { iconOnly = false } = {}) {
   return `<span class="chip chip-genre">${escHtml(id)}</span>`;
 }
 
-// ── Tag / genre pill thresholds ───────────────────────────────────────────────
-// Tags matching more than this many songs are shown as filter pills by default;
+// ── Pill thresholds ───────────────────────────────────────────────────────────
+// Pills matching more than this many songs are shown by default;
 // the rest are collapsed behind a "More" toggle to keep the filter row tidy.
 export const TAG_PILL_MIN_COUNT = 10;
 

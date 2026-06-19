@@ -1,7 +1,7 @@
 ---
 import fs from 'node:fs';
 import path from 'node:path';
-import { slugify, difficultyBand, difficultyLabel, escHtml, buildBadges, renderBadge, parseTags, renderTag } from '../../utils/utils.js';
+import { slugify, difficultyBand, difficultyLabel, escHtml, buildBadges, renderBadge, parseCountry, renderCountry, parseTheme, renderTheme } from '../../utils/utils.js';
 import '../../styles/styles.css';
 
 export async function getStaticPaths() {
@@ -73,9 +73,13 @@ function generateMetadataRows(p) {
     rows.push(metaRow('Genre', `<span class="card-chips">${genreChips}</span>`));
   }
 
-  const tags = parseTags(p);
-  if (tags.length) rows.push(metaRow('Tags',
-    `<span class="card-chips">${tags.map(t => renderTag(t)).join('')}</span>`));
+  const countries = parseCountry(p);
+  if (countries.length) rows.push(metaRow('Country',
+    `<span class="card-chips">${countries.map(c => renderCountry(c)).join('')}</span>`));
+
+  const themes = parseTheme(p);
+  if (themes.length) rows.push(metaRow('Theme',
+    `<span class="card-chips">${themes.map(t => renderTheme(t)).join('')}</span>`));
 
   return rows.length ? `<div class="song-meta">${rows.join('')}</div>` : '';
 }

@@ -9,10 +9,14 @@ import {
   buildBadges,
   renderBadge,
   BADGE_DEFS,
-  TAG_DEFS,
-  getTag,
-  parseTags,
-  renderTag,
+  COUNTRY_DEFS,
+  THEME_DEFS,
+  getCountry,
+  getTheme,
+  parseCountry,
+  parseTheme,
+  renderCountry,
+  renderTheme,
   splitTagsByThreshold,
 } from './utils.js';
 
@@ -205,79 +209,120 @@ describe('renderBadge', () => {
   });
 });
 
-// ── getTag ─────────────────────────────────────────────────────────────────
+// ── getCountry ────────────────────────────────────────────────────────────────
 
-describe('getTag', () => {
-  it('returns the known def for a recognised id', () => {
-    expect(getTag('halloween')).toBe(TAG_DEFS.halloween);
+describe('getCountry', () => {
+  it('returns a known def with the id attached', () => {
+    const c = getCountry('ireland');
+    expect(c.id).toBe('ireland');
+    expect(c.emoji).toBe(COUNTRY_DEFS.ireland.emoji);
+    expect(c.label).toBe('Ireland');
   });
 
-  it('synthesizes a default for unknown ids', () => {
-    const tag = getTag('summer-2026');
-    expect(tag.id).toBe('summer-2026');
-    expect(tag.emoji).toBe('🏷️');
-    expect(tag.label).toBe('Summer 2026');
+  it('synthesizes a fallback for unknown ids', () => {
+    const c = getCountry('narnia');
+    expect(c.id).toBe('narnia');
+    expect(c.emoji).toBe('🌍');
+    expect(c.label).toBe('Narnia');
   });
 
-  it('resolves country tags to a flag emoji instead of the fallback', () => {
-    expect(getTag('canada').emoji).toBe('🇨🇦');
-    expect(getTag('france').emoji).not.toBe('🏷️');
-  });
-
-  it('matches space-containing tag ids exactly', () => {
-    expect(getTag('new zealand').label).toBe('New Zealand');
-    expect(getTag('puerto rico').emoji).toBe('🇵🇷');
+  it('handles space-containing ids', () => {
+    expect(getCountry('new zealand').label).toBe('New Zealand');
+    expect(getCountry('puerto rico').emoji).toBe('🇵🇷');
   });
 });
 
-// ── parseTags ──────────────────────────────────────────────────────────────
+// ── getTheme ─────────────────────────────────────────────────────────────────
 
-describe('parseTags', () => {
-  it('splits the comma-separated specialbooks field', () => {
-    expect(parseTags({ specialbooks: 'pride,halloween' })).toEqual(['pride', 'halloween']);
+describe('getTheme', () => {
+  it('returns a known def with the id attached', () => {
+    const t = getTheme('halloween');
+    expect(t.id).toBe('halloween');
+    expect(t.emoji).toBe(THEME_DEFS.halloween.emoji);
+    expect(t.label).toBe('Halloween');
+  });
+
+  it('synthesizes a fallback for unknown ids', () => {
+    const t = getTheme('summer-2026');
+    expect(t.id).toBe('summer-2026');
+    expect(t.emoji).toBe('🏷️');
+    expect(t.label).toBe('Summer 2026');
+  });
+});
+
+// ── parseCountry ──────────────────────────────────────────────────────────────
+
+describe('parseCountry', () => {
+  it('splits the comma-separated country field', () => {
+    expect(parseCountry({ country: 'united states,ireland' })).toEqual(['united states', 'ireland']);
   });
 
   it('trims whitespace and drops empties', () => {
-    expect(parseTags({ specialbooks: ' pride , , xmas ' })).toEqual(['pride', 'xmas']);
-  });
-
-  it('filters out hidden tags (regular, hooley-2025, womens-2026, can2025, nocan2025)', () => {
-    expect(parseTags({ specialbooks: 'regular,pride,hooley-2025' })).toEqual(['pride']);
-    expect(parseTags({ specialbooks: 'womens-2026,pride,can2025' })).toEqual(['pride']);
-    expect(parseTags({ specialbooks: 'nocan2025,pride' })).toEqual(['pride']);
-    expect(parseTags({ specialbooks: 'pride.uk,pride' })).toEqual(['pride']);
+    expect(parseCountry({ country: ' ireland , , france ' })).toEqual(['ireland', 'france']);
   });
 
   it('returns an empty array for missing or empty input', () => {
-    expect(parseTags({})).toEqual([]);
-    expect(parseTags(null)).toEqual([]);
-    expect(parseTags({ specialbooks: '' })).toEqual([]);
-    expect(parseTags({ specialbooks: 'regular' })).toEqual([]);
+    expect(parseCountry({})).toEqual([]);
+    expect(parseCountry(null)).toEqual([]);
+    expect(parseCountry({ country: '' })).toEqual([]);
   });
 });
 
-// ── renderTag ──────────────────────────────────────────────────────────────
+// ── parseTheme ────────────────────────────────────────────────────────────────
 
-describe('renderTag', () => {
-  it('renders emoji and label by default', () => {
-    const html = renderTag('halloween');
-    expect(html).toContain('🎃');
-    expect(html).toContain('Halloween');
-    expect(html).toContain('chip-tag');
+describe('parseTheme', () => {
+  it('splits the comma-separated theme field', () => {
+    expect(parseTheme({ theme: 'pride,valentines' })).toEqual(['pride', 'valentines']);
   });
 
-  it('renders emoji only as content when iconOnly is true', () => {
-    const html = renderTag('halloween', { iconOnly: true });
-    // label still appears in the title attribute, but not in the visible content
-    expect(html).toContain('>🎃</span>');
+  it('trims whitespace and drops empties', () => {
+    expect(parseTheme({ theme: ' halloween , , christmas ' })).toEqual(['halloween', 'christmas']);
+  });
+
+  it('returns an empty array for missing or empty input', () => {
+    expect(parseTheme({})).toEqual([]);
+    expect(parseTheme(null)).toEqual([]);
+    expect(parseTheme({ theme: '' })).toEqual([]);
+  });
+});
+
+// ── renderCountry ─────────────────────────────────────────────────────────────
+
+describe('renderCountry', () => {
+  it('renders emoji and label', () => {
+    const html = renderCountry('ireland');
+    expect(html).toContain('🇮🇪');
+    expect(html).toContain('Ireland');
+    expect(html).toContain('chip-country');
   });
 
   it('uses the label as the title attribute', () => {
-    expect(renderTag('pride')).toContain('title="Pride"');
+    expect(renderCountry('united states')).toContain('title="United States"');
   });
 
-  it('escapes unknown ids in the title attribute', () => {
-    const html = renderTag('<x>');
+  it('escapes unknown ids', () => {
+    const html = renderCountry('<x>');
+    expect(html).toContain('&lt;x&gt;');
+    expect(html).not.toContain('<x>');
+  });
+});
+
+// ── renderTheme ───────────────────────────────────────────────────────────────
+
+describe('renderTheme', () => {
+  it('renders emoji and label', () => {
+    const html = renderTheme('halloween');
+    expect(html).toContain('🎃');
+    expect(html).toContain('Halloween');
+    expect(html).toContain('chip-theme');
+  });
+
+  it('uses the label as the title attribute', () => {
+    expect(renderTheme('pride')).toContain('title="Pride"');
+  });
+
+  it('escapes unknown ids', () => {
+    const html = renderTheme('<x>');
     expect(html).toContain('&lt;x&gt;');
     expect(html).not.toContain('<x>');
   });

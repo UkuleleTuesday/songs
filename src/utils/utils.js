@@ -50,6 +50,50 @@ export function decadeLabel(band) {
   return `${n}s`;
 }
 
+// Sparse early decades (a lone pre-war song or two) don't each deserve a pill,
+// so the decades older than the first well-populated one fold into a single
+// "before" bucket. Its filter value is `pre-<floor>` (e.g. "pre-1960").
+export const PRE_DECADE_PREFIX = "pre-";
+
+// Pick the floor decade: the earliest decade whose count clears `min`. Decades
+// older than the floor are the sparse tail that gets bucketed. Returns the
+// floor decade-start (a number) — or null when there's nothing to fold (no
+// decade clears the threshold, or the earliest decade is already the floor).
+export function decadeFloor(counts, min = TAG_PILL_MIN_COUNT) {
+  const countOf = id => (counts instanceof Map ? counts.get(id) : counts[id]) || 0;
+  const decades = (counts instanceof Map ? [...counts.keys()] : Object.keys(counts))
+    .map(Number)
+    .sort((a, b) => a - b);
+  if (!decades.length) return null;
+  const firstStrong = decades.find(d => countOf(String(d)) > min);
+  if (firstStrong == null) return null;
+  return decades.some(d => d < firstStrong) ? firstStrong : null;
+}
+
+export function isPreDecadeBucket(value) {
+  return typeof value === "string" && value.startsWith(PRE_DECADE_PREFIX);
+}
+
+// Map a year to its decade filter value, given the computed floor. Years older
+// than the floor collapse to the shared bucket value; everything else maps to
+// its own decade band.
+export function decadeFilterBand(year, floor) {
+  const band = decadeBand(year);
+  if (band == null) return null;
+  if (floor != null && Number(band) < floor) return `${PRE_DECADE_PREFIX}${floor}`;
+  return band;
+}
+
+// Pill label for any decade filter value — the "Pre-1960s" bucket or a plain
+// "1980s" decade.
+export function decadeFilterLabel(value) {
+  if (isPreDecadeBucket(value)) {
+    const floor = parseInt(value.slice(PRE_DECADE_PREFIX.length), 10);
+    return isNaN(floor) ? null : `Pre-${floor}s`;
+  }
+  return decadeLabel(value);
+}
+
 export const STATUS_LABELS = {
   APPROVED:      "Approved",
   READY_TO_PLAY: "Ready to play",

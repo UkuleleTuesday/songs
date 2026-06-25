@@ -5,7 +5,10 @@ import {
   difficultyLabel,
   DIFFICULTY_BANDS,
   decadeBand,
-  decadeLabel,
+  decadeFloor,
+  decadeFilterBand,
+  decadeFilterLabel,
+  PRE_DECADE_PREFIX,
   escHtml,
   buildBadges,
   renderBadge,
@@ -110,7 +113,7 @@ function applyFilters(songs, lunrIndex, allSongs, filters) {
 
   if (filters.decades.length) {
     result = result.filter(s => {
-      const band = decadeBand((s.properties || {}).year);
+      const band = decadeFilterBand((s.properties || {}).year, decadeFloorYear);
       return band != null && filters.decades.includes(band);
     });
   }
@@ -204,10 +207,10 @@ function renderCard(song) {
     ? `<span class="chip chip-diff-${band}">${escHtml(difficultyLabel(band))}</span>`
     : '';
 
-  const decade = decadeBand(p.year);
+  const decade = decadeFilterBand(p.year, decadeFloorYear);
   const yearChip = p.year
     ? (decade != null
-        ? `<span class="chip chip-neutral chip-clickable" data-filter-type="decade" data-filter-value="${escHtml(decade)}" role="button" tabindex="0" title="Filter by the ${escHtml(decadeLabel(decade))}">${escHtml(p.year)}</span>`
+        ? `<span class="chip chip-neutral chip-clickable" data-filter-type="decade" data-filter-value="${escHtml(decade)}" role="button" tabindex="0" title="Filter by ${escHtml(decadeFilterLabel(decade))}">${escHtml(p.year)}</span>`
         : `<span class="chip chip-neutral">${escHtml(p.year)}</span>`)
     : '';
 
@@ -259,6 +262,9 @@ function renderCard(song) {
 
 let allSongs  = [];
 let lunrIndex = null;
+// The floor decade for bucketing sparse early decades into a single "Pre-<floor>s"
+// pill. Computed once from the dataset in renderDecadePills; null = no bucketing.
+let decadeFloorYear = null;
 const activeDifficulties = new Set();
 const activeDecades      = new Set();
 const activeCountries    = new Set();
@@ -416,8 +422,8 @@ function renderDifficultyPills(songs) {
 }
 
 // Build decade filter pills for the decades present in the dataset, ordered
-// chronologically. Sparse outlier decades (a lone pre-war song) collapse behind
-// the "More" toggle via splitTagsByThreshold. Multi-select like the other pills.
+// chronologically. Sparse early decades (a lone pre-war song) fold into a single
+// leading "Pre-<floor>s" bucket pill. Multi-select like the other pills.
 function renderDecadePills(songs) {
   const counts = new Map();
   songs.forEach(s => {
@@ -428,24 +434,21 @@ function renderDecadePills(songs) {
   const container = document.getElementById('decade-filter');
   if (!container) return;
 
-  const ordered = [...counts.keys()].sort((a, b) => Number(a) - Number(b));
+  decadeFloorYear = decadeFloor(counts);
 
-  const [shown, hidden] = splitTagsByThreshold(ordered, counts);
+  // Bucket pill first (when there are sparse old decades to fold), then each
+  // decade from the floor onward, ascending.
+  const values = [];
+  if (decadeFloorYear != null) values.push(`${PRE_DECADE_PREFIX}${decadeFloorYear}`);
+  [...counts.keys()]
+    .map(Number)
+    .filter(d => decadeFloorYear == null || d >= decadeFloorYear)
+    .sort((a, b) => a - b)
+    .forEach(d => values.push(String(d)));
 
-  const pill = (id, extra = '') =>
-    `<button type="button" class="tag-pill decade-pill${extra}" data-decade="${escHtml(id)}" aria-pressed="false">`
-    + `${escHtml(decadeLabel(id))}</button>`;
-
-  let html = shown.map(id => pill(id)).join('');
-  if (hidden.length) {
-    html += `<button type="button" id="decade-more" class="tag-more" aria-expanded="false">`
-      + `+${hidden.length} more</button>`;
-    html += hidden.map(id => pill(id, ' tag-overflow-item')).join('');
-    container.classList.add('overflow-collapsed');
-  } else {
-    container.classList.remove('overflow-collapsed');
-  }
-  container.innerHTML = html;
+  container.innerHTML = values.map(v =>
+    `<button type="button" class="tag-pill decade-pill" data-decade="${escHtml(v)}" aria-pressed="false">`
+    + `${escHtml(decadeFilterLabel(v))}</button>`).join('');
 }
 
 function render() {
@@ -512,17 +515,6 @@ document.getElementById('difficulty-filter').addEventListener('click', (e) => {
 });
 
 document.getElementById('decade-filter').addEventListener('click', (e) => {
-  const more = e.target.closest('#decade-more');
-  if (more) {
-    const container = document.getElementById('decade-filter');
-    const collapsed = container.classList.toggle('overflow-collapsed');
-    more.setAttribute('aria-expanded', String(!collapsed));
-    more.textContent = collapsed
-      ? `+${container.querySelectorAll('.tag-overflow-item').length} more`
-      : 'Show less';
-    return;
-  }
-
   const pill = e.target.closest('.decade-pill');
   if (!pill) return;
   const decade = pill.dataset.decade;

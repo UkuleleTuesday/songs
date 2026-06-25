@@ -6,6 +6,10 @@ import {
   DIFFICULTY_BANDS,
   decadeBand,
   decadeLabel,
+  decadeFloor,
+  decadeFilterBand,
+  decadeFilterLabel,
+  isPreDecadeBucket,
   escHtml,
   isNewSong,
   buildBadges,
@@ -165,6 +169,88 @@ describe('decadeLabel', () => {
     expect(decadeLabel(null)).toBeNull();
     expect(decadeLabel('')).toBeNull();
     expect(decadeLabel('abc')).toBeNull();
+  });
+});
+
+// ── decadeFloor ────────────────────────────────────────────────────────────
+
+describe('decadeFloor', () => {
+  it('returns the earliest decade clearing the threshold when sparse older decades exist', () => {
+    // Mirrors the real dataset: sparse 1890s/1900s/1950s, then a strong 1960s.
+    const counts = new Map([['1890', 1], ['1900', 1], ['1950', 6], ['1960', 25], ['1980', 58]]);
+    expect(decadeFloor(counts, 10)).toBe(1960);
+  });
+
+  it('returns null when the earliest decade is already well-populated (nothing to fold)', () => {
+    const counts = new Map([['1960', 25], ['1970', 40]]);
+    expect(decadeFloor(counts, 10)).toBeNull();
+  });
+
+  it('returns null when no decade clears the threshold', () => {
+    const counts = new Map([['1950', 6], ['1960', 8]]);
+    expect(decadeFloor(counts, 10)).toBeNull();
+  });
+
+  it('accepts a plain object for counts', () => {
+    expect(decadeFloor({ '1950': 2, '1980': 50 }, 10)).toBe(1980);
+  });
+
+  it('returns null for empty counts', () => {
+    expect(decadeFloor(new Map(), 10)).toBeNull();
+  });
+});
+
+// ── decadeFilterBand ───────────────────────────────────────────────────────
+
+describe('decadeFilterBand', () => {
+  it('folds years older than the floor into the bucket value', () => {
+    expect(decadeFilterBand('1893', 1960)).toBe('pre-1960');
+    expect(decadeFilterBand('1955', 1960)).toBe('pre-1960');
+  });
+
+  it('keeps the decade band for years at or after the floor', () => {
+    expect(decadeFilterBand('1960', 1960)).toBe('1960');
+    expect(decadeFilterBand('1984', 1960)).toBe('1980');
+  });
+
+  it('returns the plain decade band when there is no floor', () => {
+    expect(decadeFilterBand('1893', null)).toBe('1890');
+    expect(decadeFilterBand('1984', null)).toBe('1980');
+  });
+
+  it('returns null for invalid years', () => {
+    expect(decadeFilterBand('', 1960)).toBeNull();
+    expect(decadeFilterBand(null, 1960)).toBeNull();
+  });
+});
+
+// ── decadeFilterLabel ──────────────────────────────────────────────────────
+
+describe('decadeFilterLabel', () => {
+  it('labels the bucket value as "Pre-<floor>s"', () => {
+    expect(decadeFilterLabel('pre-1960')).toBe('Pre-1960s');
+  });
+
+  it('labels a plain decade band normally', () => {
+    expect(decadeFilterLabel('1980')).toBe('1980s');
+  });
+
+  it('returns null for an unparseable bucket', () => {
+    expect(decadeFilterLabel('pre-abc')).toBeNull();
+  });
+});
+
+// ── isPreDecadeBucket ──────────────────────────────────────────────────────
+
+describe('isPreDecadeBucket', () => {
+  it('recognises bucket values', () => {
+    expect(isPreDecadeBucket('pre-1960')).toBe(true);
+  });
+
+  it('rejects plain decade bands and non-strings', () => {
+    expect(isPreDecadeBucket('1980')).toBe(false);
+    expect(isPreDecadeBucket(null)).toBe(false);
+    expect(isPreDecadeBucket(1960)).toBe(false);
   });
 });
 

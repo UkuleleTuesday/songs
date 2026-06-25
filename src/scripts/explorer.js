@@ -20,8 +20,8 @@ import {
   splitTagsByThreshold,
   filtersToSearchParams,
   parseFiltersFromSearch,
-  shouldRevealOverflow,
 } from '../utils/utils.js';
+import { toggleFilterPill } from './filter-pills.js';
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
@@ -262,36 +262,11 @@ const FILTER_GROUPS = {
   genre:      { set: activeGenres,       container: 'genre-filter',      attr: 'genre'      },
 };
 
-// Reveal a collapsed "+N more" pill overflow (used when a restored or
-// chip-applied filter lives in the hidden tail and would otherwise be invisible).
-function expandOverflow(container) {
-  if (!container.classList.contains('overflow-collapsed')) return;
-  container.classList.remove('overflow-collapsed');
-  const more = container.querySelector('.tag-more');
-  if (more) {
-    more.setAttribute('aria-expanded', 'true');
-    more.textContent = 'Show less';
-  }
-}
-
-// Toggle a filter value on/off, keeping the backing Set and the matching pill's
-// visual state in sync. Does not call render(); callers do.
+// Toggle a filter value by type, dispatching to the shared pill helper. Keeps
+// the type-based call sites (handlers, chips, URL restore) ergonomic while the
+// DOM logic lives in the testable filter-pills module. Does not render.
 function setFilterActive(type, value, active) {
-  const group = FILTER_GROUPS[type];
-  if (!group) return;
-  if (active) group.set.add(value); else group.set.delete(value);
-
-  const container = document.getElementById(group.container);
-  if (!container) return;
-  const pill = [...container.querySelectorAll(`[data-${group.attr}]`)]
-    .find(el => el.dataset[group.attr] === value);
-  if (pill) {
-    pill.classList.toggle('active', active);
-    pill.setAttribute('aria-pressed', String(active));
-    if (shouldRevealOverflow(active, pill.classList.contains('tag-overflow-item'))) {
-      expandOverflow(container);
-    }
-  }
+  toggleFilterPill(FILTER_GROUPS[type], value, active);
 }
 
 // Push the current filter state into the URL's query string (without adding a

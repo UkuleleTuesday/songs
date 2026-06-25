@@ -191,7 +191,7 @@ export const COUNTRY_DEFS = {
 // sets the display order of the filter pills.
 
 export const THEME_DEFS = {
-  valentines: { emoji: '💘',    label: "Valentine's" },
+  valentines: { emoji: '💕',    label: "Love" },
   pride:      { emoji: '🏳️‍🌈', label: 'Pride' },
   halloween:  { emoji: '🎃',    label: 'Halloween' },
   christmas:  { emoji: '🎄',    label: 'Christmas' },

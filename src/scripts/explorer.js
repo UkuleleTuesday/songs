@@ -20,6 +20,7 @@ import {
   splitTagsByThreshold,
   filtersToSearchParams,
   parseFiltersFromSearch,
+  shouldRevealOverflow,
 } from '../utils/utils.js';
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
@@ -287,9 +288,9 @@ function setFilterActive(type, value, active) {
   if (pill) {
     pill.classList.toggle('active', active);
     pill.setAttribute('aria-pressed', String(active));
-    // Only reveal the collapsed tail when the activated pill lives in it —
-    // otherwise activating a top-level pill would expand the overflow too.
-    if (active && pill.classList.contains('tag-overflow-item')) expandOverflow(container);
+    if (shouldRevealOverflow(active, pill.classList.contains('tag-overflow-item'))) {
+      expandOverflow(container);
+    }
   }
 }
 

@@ -212,6 +212,14 @@ export function splitTagsByThreshold(orderedIds, counts, min = TAG_PILL_MIN_COUN
   return [shown, orderedIds.filter(id => countOf(id) <= min)];
 }
 
+// Whether activating a filter pill should reveal the collapsed "+N more" tail.
+// Only true when the pill being switched on lives in that hidden tail — so a
+// filter applied from a shared URL or a clicked card chip stays visible, while
+// toggling an already-visible (top-level) pill never auto-expands the overflow.
+export function shouldRevealOverflow(active, pillIsInOverflow) {
+  return Boolean(active && pillIsInOverflow);
+}
+
 // ── Shareable filter state ⇄ URL ───────────────────────────────────────────────
 // The explorer's filter state serialises to query-string params so a filtered
 // view can be shared as a link (e.g. ?q=perfect&difficulty=easy&country=ireland).

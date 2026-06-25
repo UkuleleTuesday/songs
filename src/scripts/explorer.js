@@ -18,6 +18,8 @@ import {
   parseGenres,
   renderGenre,
   splitTagsByThreshold,
+  filtersToSearchParams,
+  parseFiltersFromSearch,
 } from '../utils/utils.js';
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
@@ -195,9 +197,9 @@ function renderCard(song) {
     ? `<span class="chip chip-neutral">${escHtml(p.year)}</span>`
     : '';
 
-  const countryChips = parseCountry(p).map(c => renderCountry(c)).join('');
-  const themeChips   = parseTheme(p).map(t => renderTheme(t)).join('');
-  const genreChips   = parseGenres(p).map(g => renderGenre(g)).join('');
+  const countryChips = parseCountry(p).map(c => renderCountry(c, { clickable: true })).join('');
+  const themeChips   = parseTheme(p).map(t => renderTheme(t,   { clickable: true })).join('');
+  const genreChips   = parseGenres(p).map(g => renderGenre(g,  { clickable: true })).join('');
 
   const chips = buildBadges(p).map(b => renderBadge(b, { iconOnly: true })).join('')
     + diffChip + yearChip + themeChips + countryChips + genreChips;
@@ -247,6 +249,66 @@ const activeDifficulties = new Set();
 const activeCountries    = new Set();
 const activeThemes       = new Set();
 const activeGenres       = new Set();
+
+// Maps each multi-select filter type to its backing Set, the container holding
+// its pills, and the data-attribute the pills carry. Shared by the pill click
+// handlers, the clickable card chips, and URL state restore so all three toggle
+// filters through one code path.
+const FILTER_GROUPS = {
+  difficulty: { set: activeDifficulties, container: 'difficulty-filter', attr: 'difficulty' },
+  country:    { set: activeCountries,    container: 'country-filter',    attr: 'country'    },
+  theme:      { set: activeThemes,       container: 'theme-filter',      attr: 'theme'      },
+  genre:      { set: activeGenres,       container: 'genre-filter',      attr: 'genre'      },
+};
+
+// Reveal a collapsed "+N more" pill overflow (used when a restored or
+// chip-applied filter lives in the hidden tail and would otherwise be invisible).
+function expandOverflow(container) {
+  if (!container.classList.contains('overflow-collapsed')) return;
+  container.classList.remove('overflow-collapsed');
+  const more = container.querySelector('.tag-more');
+  if (more) {
+    more.setAttribute('aria-expanded', 'true');
+    more.textContent = 'Show less';
+  }
+}
+
+// Toggle a filter value on/off, keeping the backing Set and the matching pill's
+// visual state in sync. Does not call render(); callers do.
+function setFilterActive(type, value, active) {
+  const group = FILTER_GROUPS[type];
+  if (!group) return;
+  if (active) group.set.add(value); else group.set.delete(value);
+
+  const container = document.getElementById(group.container);
+  if (!container) return;
+  const pill = [...container.querySelectorAll(`[data-${group.attr}]`)]
+    .find(el => el.dataset[group.attr] === value);
+  if (pill) {
+    pill.classList.toggle('active', active);
+    pill.setAttribute('aria-pressed', String(active));
+    if (active) expandOverflow(container);
+  }
+}
+
+// Push the current filter state into the URL's query string (without adding a
+// history entry) so the view is shareable and survives a reload.
+function syncUrl(filters) {
+  const qs  = filtersToSearchParams(filters).toString();
+  const url = window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash;
+  history.replaceState(null, '', url);
+}
+
+// Seed the UI from query-string params on first load.
+function applyInitialFilters() {
+  const f = parseFiltersFromSearch(window.location.search);
+  if (f.query) document.getElementById('search').value = f.query;
+  if (f.sort)  document.getElementById('sort-by').value = f.sort;
+  f.difficulties.forEach(v => setFilterActive('difficulty', v, true));
+  f.countries.forEach(v    => setFilterActive('country',    v, true));
+  f.themes.forEach(v       => setFilterActive('theme',      v, true));
+  f.genres.forEach(v       => setFilterActive('genre',      v, true));
+}
 
 // Country pills: COUNTRY_DEFS order for known entries, then unknowns by frequency.
 // Popular ones show by default; long tail collapses behind "More".
@@ -361,6 +423,7 @@ function renderDifficultyPills(songs) {
 
 function render() {
   const filters  = getFilters();
+  syncUrl(filters);
   const filtered = applyFilters(allSongs, lunrIndex, allSongs, filters);
   const sorted   = sortSongs(filtered, filters.sort);
 
@@ -389,6 +452,8 @@ async function init() {
     renderThemePills(allSongs);
     renderGenrePills(allSongs);
 
+    applyInitialFilters();
+
     document.getElementById('loading').hidden = true;
     document.getElementById('header-count-inline').textContent =
       allSongs.length.toLocaleString();
@@ -414,10 +479,7 @@ document.getElementById('difficulty-filter').addEventListener('click', (e) => {
   const pill = e.target.closest('.difficulty-pill');
   if (!pill) return;
   const band = pill.dataset.difficulty;
-  const active = !activeDifficulties.has(band);
-  if (active) activeDifficulties.add(band); else activeDifficulties.delete(band);
-  pill.classList.toggle('active', active);
-  pill.setAttribute('aria-pressed', String(active));
+  setFilterActive('difficulty', band, !activeDifficulties.has(band));
   render();
 });
 
@@ -436,10 +498,7 @@ document.getElementById('country-filter').addEventListener('click', (e) => {
   const pill = e.target.closest('.country-pill');
   if (!pill) return;
   const country = pill.dataset.country;
-  const active = !activeCountries.has(country);
-  if (active) activeCountries.add(country); else activeCountries.delete(country);
-  pill.classList.toggle('active', active);
-  pill.setAttribute('aria-pressed', String(active));
+  setFilterActive('country', country, !activeCountries.has(country));
   render();
 });
 
@@ -447,10 +506,7 @@ document.getElementById('theme-filter').addEventListener('click', (e) => {
   const pill = e.target.closest('.theme-pill');
   if (!pill) return;
   const theme = pill.dataset.theme;
-  const active = !activeThemes.has(theme);
-  if (active) activeThemes.add(theme); else activeThemes.delete(theme);
-  pill.classList.toggle('active', active);
-  pill.setAttribute('aria-pressed', String(active));
+  setFilterActive('theme', theme, !activeThemes.has(theme));
   render();
 });
 
@@ -469,11 +525,35 @@ document.getElementById('genre-filter').addEventListener('click', (e) => {
   const pill = e.target.closest('.genre-pill');
   if (!pill) return;
   const genre = pill.dataset.genre;
-  const active = !activeGenres.has(genre);
-  if (active) activeGenres.add(genre); else activeGenres.delete(genre);
-  pill.classList.toggle('active', active);
-  pill.setAttribute('aria-pressed', String(active));
+  setFilterActive('genre', genre, !activeGenres.has(genre));
   render();
+});
+
+// Clickable card chips (country / theme / genre) act as filter toggles. They
+// live inside the card's <a>, so we stop the click from navigating to the sheet.
+function toggleChip(chip) {
+  const type  = chip.dataset.filterType;
+  const value = chip.dataset.filterValue;
+  const group = FILTER_GROUPS[type];
+  if (!group) return;
+  setFilterActive(type, value, !group.set.has(value));
+  render();
+}
+
+const resultsEl = document.getElementById('results');
+resultsEl.addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip-clickable');
+  if (!chip) return;
+  e.preventDefault();
+  e.stopPropagation();
+  toggleChip(chip);
+});
+resultsEl.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const chip = e.target.closest('.chip-clickable');
+  if (!chip) return;
+  e.preventDefault();
+  toggleChip(chip);
 });
 
 document.getElementById('btn-clear').addEventListener('click', () => {

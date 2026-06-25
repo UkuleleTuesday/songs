@@ -4,6 +4,11 @@ import {
   difficultyBand,
   difficultyLabel,
   DIFFICULTY_BANDS,
+  decadeBand,
+  decadeFloor,
+  decadeFilterBand,
+  decadeFilterLabel,
+  PRE_DECADE_PREFIX,
   escHtml,
   buildBadges,
   renderBadge,
@@ -106,6 +111,13 @@ function applyFilters(songs, lunrIndex, allSongs, filters) {
     });
   }
 
+  if (filters.decades.length) {
+    result = result.filter(s => {
+      const band = decadeFilterBand((s.properties || {}).year, decadeFloorYear);
+      return band != null && filters.decades.includes(band);
+    });
+  }
+
   if (filters.countries.length) {
     result = result.filter(s => {
       const countries = parseCountry(s.properties || {});
@@ -148,6 +160,7 @@ function getFilters() {
   return {
     query:        document.getElementById('search').value.trim(),
     difficulties: [...activeDifficulties],
+    decades:      [...activeDecades],
     countries:    [...activeCountries],
     themes:       [...activeThemes],
     genres:       [...activeGenres],
@@ -194,8 +207,11 @@ function renderCard(song) {
     ? `<span class="chip chip-diff-${band}">${escHtml(difficultyLabel(band))}</span>`
     : '';
 
+  const decade = decadeFilterBand(p.year, decadeFloorYear);
   const yearChip = p.year
-    ? `<span class="chip chip-neutral">${escHtml(p.year)}</span>`
+    ? (decade != null
+        ? `<span class="chip chip-neutral chip-clickable" data-filter-type="decade" data-filter-value="${escHtml(decade)}" role="button" tabindex="0" title="Filter by ${escHtml(decadeFilterLabel(decade))}">${escHtml(p.year)}</span>`
+        : `<span class="chip chip-neutral">${escHtml(p.year)}</span>`)
     : '';
 
   const countryChips = parseCountry(p).map(c => renderCountry(c, { clickable: true })).join('');
@@ -246,7 +262,11 @@ function renderCard(song) {
 
 let allSongs  = [];
 let lunrIndex = null;
+// The floor decade for bucketing sparse early decades into a single "Pre-<floor>s"
+// pill. Computed once from the dataset in renderDecadePills; null = no bucketing.
+let decadeFloorYear = null;
 const activeDifficulties = new Set();
+const activeDecades      = new Set();
 const activeCountries    = new Set();
 const activeThemes       = new Set();
 const activeGenres       = new Set();
@@ -257,6 +277,7 @@ const activeGenres       = new Set();
 // filters through one code path.
 const FILTER_GROUPS = {
   difficulty: { set: activeDifficulties, container: 'difficulty-filter', attr: 'difficulty' },
+  decade:     { set: activeDecades,      container: 'decade-filter',     attr: 'decade'     },
   country:    { set: activeCountries,    container: 'country-filter',    attr: 'country'    },
   theme:      { set: activeThemes,       container: 'theme-filter',      attr: 'theme'      },
   genre:      { set: activeGenres,       container: 'genre-filter',      attr: 'genre'      },
@@ -283,6 +304,7 @@ function applyInitialFilters() {
   if (f.query) document.getElementById('search').value = f.query;
   if (f.sort)  document.getElementById('sort-by').value = f.sort;
   f.difficulties.forEach(v => setFilterActive('difficulty', v, true));
+  f.decades.forEach(v      => setFilterActive('decade',     v, true));
   f.countries.forEach(v    => setFilterActive('country',    v, true));
   f.themes.forEach(v       => setFilterActive('theme',      v, true));
   f.genres.forEach(v       => setFilterActive('genre',      v, true));
@@ -399,6 +421,36 @@ function renderDifficultyPills(songs) {
     .join('');
 }
 
+// Build decade filter pills for the decades present in the dataset, ordered
+// chronologically. Sparse early decades (a lone pre-war song) fold into a single
+// leading "Pre-<floor>s" bucket pill. Multi-select like the other pills.
+function renderDecadePills(songs) {
+  const counts = new Map();
+  songs.forEach(s => {
+    const band = decadeBand((s.properties || {}).year);
+    if (band) counts.set(band, (counts.get(band) || 0) + 1);
+  });
+
+  const container = document.getElementById('decade-filter');
+  if (!container) return;
+
+  decadeFloorYear = decadeFloor(counts);
+
+  // Bucket pill first (when there are sparse old decades to fold), then each
+  // decade from the floor onward, ascending.
+  const values = [];
+  if (decadeFloorYear != null) values.push(`${PRE_DECADE_PREFIX}${decadeFloorYear}`);
+  [...counts.keys()]
+    .map(Number)
+    .filter(d => decadeFloorYear == null || d >= decadeFloorYear)
+    .sort((a, b) => a - b)
+    .forEach(d => values.push(String(d)));
+
+  container.innerHTML = values.map(v =>
+    `<button type="button" class="tag-pill decade-pill" data-decade="${escHtml(v)}" aria-pressed="false">`
+    + `${escHtml(decadeFilterLabel(v))}</button>`).join('');
+}
+
 function render() {
   const filters  = getFilters();
   syncUrl(filters);
@@ -426,6 +478,7 @@ async function init() {
     lunrIndex = buildIndex(allSongs);
 
     renderDifficultyPills(allSongs);
+    renderDecadePills(allSongs);
     renderCountryPills(allSongs);
     renderThemePills(allSongs);
     renderGenrePills(allSongs);
@@ -458,6 +511,14 @@ document.getElementById('difficulty-filter').addEventListener('click', (e) => {
   if (!pill) return;
   const band = pill.dataset.difficulty;
   setFilterActive('difficulty', band, !activeDifficulties.has(band));
+  render();
+});
+
+document.getElementById('decade-filter').addEventListener('click', (e) => {
+  const pill = e.target.closest('.decade-pill');
+  if (!pill) return;
+  const decade = pill.dataset.decade;
+  setFilterActive('decade', decade, !activeDecades.has(decade));
   render();
 });
 
@@ -538,10 +599,11 @@ document.getElementById('btn-clear').addEventListener('click', () => {
   document.getElementById('search').value  = '';
   document.getElementById('sort-by').value = 'title';
   activeDifficulties.clear();
+  activeDecades.clear();
   activeCountries.clear();
   activeThemes.clear();
   activeGenres.clear();
-  document.querySelectorAll('.difficulty-pill.active, .country-pill.active, .theme-pill.active, .genre-pill.active').forEach(p => {
+  document.querySelectorAll('.difficulty-pill.active, .decade-pill.active, .country-pill.active, .theme-pill.active, .genre-pill.active').forEach(p => {
     p.classList.remove('active');
     p.setAttribute('aria-pressed', 'false');
   });

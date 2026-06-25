@@ -74,6 +74,12 @@ const base = import.meta.env.BASE_URL; // used for static asset paths in templat
       <div id="difficulty-filter" class="tag-filter" role="group" aria-labelledby="difficulty-filter-label"></div>
     </div>
 
+    <!-- Decade filter (pills derived from each song's year, populated at runtime) -->
+    <div class="filter-group filter-group-tags">
+      <label id="decade-filter-label">Decade</label>
+      <div id="decade-filter" class="tag-filter" role="group" aria-labelledby="decade-filter-label"></div>
+    </div>
+
     <!-- Country filter (flag pills, populated at runtime from the dataset) -->
     <div class="filter-group filter-group-tags">
       <label id="country-filter-label">Country</label>

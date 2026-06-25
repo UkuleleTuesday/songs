@@ -4,6 +4,8 @@ import {
   difficultyBand,
   difficultyLabel,
   DIFFICULTY_BANDS,
+  decadeBand,
+  decadeLabel,
   escHtml,
   isNewSong,
   buildBadges,
@@ -118,6 +120,51 @@ describe('DIFFICULTY_BANDS', () => {
     DIFFICULTY_BANDS.forEach(band => {
       expect(difficultyLabel(band)).not.toBeNull();
     });
+  });
+});
+
+// ── decadeBand ─────────────────────────────────────────────────────────────
+
+describe('decadeBand', () => {
+  it('maps a year to its decade-start as a string', () => {
+    expect(decadeBand('1984')).toBe('1980');
+    expect(decadeBand('1990')).toBe('1990');
+    expect(decadeBand('1999')).toBe('1990');
+    expect(decadeBand('2024')).toBe('2020');
+  });
+
+  it('handles outlier years', () => {
+    expect(decadeBand('1893')).toBe('1890');
+  });
+
+  it('accepts a numeric year', () => {
+    expect(decadeBand(1973)).toBe('1970');
+  });
+
+  it('returns null for missing or invalid values', () => {
+    expect(decadeBand(null)).toBeNull();
+    expect(decadeBand(undefined)).toBeNull();
+    expect(decadeBand('')).toBeNull();
+    expect(decadeBand('abc')).toBeNull();
+  });
+});
+
+// ── decadeLabel ────────────────────────────────────────────────────────────
+
+describe('decadeLabel', () => {
+  it('renders the conventional "1980s" form', () => {
+    expect(decadeLabel('1980')).toBe('1980s');
+    expect(decadeLabel('2020')).toBe('2020s');
+  });
+
+  it('round-trips with decadeBand', () => {
+    expect(decadeLabel(decadeBand('1979'))).toBe('1970s');
+  });
+
+  it('returns null for missing or invalid bands', () => {
+    expect(decadeLabel(null)).toBeNull();
+    expect(decadeLabel('')).toBeNull();
+    expect(decadeLabel('abc')).toBeNull();
   });
 });
 
@@ -425,6 +472,11 @@ describe('filtersToSearchParams', () => {
     expect(qs).toBe('country=ireland&genre=pop&genre=rock');
   });
 
+  it('serialises decade filters', () => {
+    const qs = filtersToSearchParams({ decades: ['1980', '1990'] }).toString();
+    expect(qs).toBe('decade=1980&decade=1990');
+  });
+
   it('omits the default sort but keeps a non-default one', () => {
     expect(filtersToSearchParams({ sort: 'title' }).toString()).toBe('');
     expect(filtersToSearchParams({ sort: 'last-added' }).toString()).toBe('sort=last-added');
@@ -437,11 +489,12 @@ describe('filtersToSearchParams', () => {
 
 describe('parseFiltersFromSearch', () => {
   it('parses query, sort, and repeated multi-select params', () => {
-    const f = parseFiltersFromSearch('?q=love&difficulty=easy&country=ireland&genre=pop&genre=rock&sort=last-added');
+    const f = parseFiltersFromSearch('?q=love&difficulty=easy&decade=1980&country=ireland&genre=pop&genre=rock&sort=last-added');
     expect(f).toEqual({
       query: 'love',
       sort: 'last-added',
       difficulties: ['easy'],
+      decades: ['1980'],
       countries: ['ireland'],
       themes: [],
       genres: ['pop', 'rock'],
@@ -451,7 +504,7 @@ describe('parseFiltersFromSearch', () => {
   it('defaults to empty arrays and title sort', () => {
     const f = parseFiltersFromSearch('');
     expect(f).toEqual({
-      query: '', sort: 'title', difficulties: [], countries: [], themes: [], genres: [],
+      query: '', sort: 'title', difficulties: [], decades: [], countries: [], themes: [], genres: [],
     });
   });
 
@@ -460,6 +513,7 @@ describe('parseFiltersFromSearch', () => {
       query: 'hey jude',
       sort: 'last-added',
       difficulties: ['easy', 'hard'],
+      decades: ['1970', '1980'],
       countries: ['united states'],
       themes: ['christmas'],
       genres: ['pop'],

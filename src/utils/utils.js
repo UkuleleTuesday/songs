@@ -30,6 +30,26 @@ export function difficultyLabel(band) {
 // Difficulty bands in ascending order — the display order of the filter pills.
 export const DIFFICULTY_BANDS = ["easy", "medium", "hard"];
 
+// ── Decades ───────────────────────────────────────────────────────────────────
+// Source: `properties.year` (a 4-digit year string). Each song maps to a single
+// decade band, keyed by the decade's start year as a string (e.g. "1980"). The
+// pill label is the conventional "1980s". Outlier decades (a lone pre-war song)
+// fall into the "More" collapse automatically via splitTagsByThreshold.
+
+export function decadeBand(year) {
+  if (year == null || year === "") return null;
+  const n = parseInt(year, 10);
+  if (isNaN(n)) return null;
+  return String(Math.floor(n / 10) * 10);
+}
+
+export function decadeLabel(band) {
+  if (band == null || band === "") return null;
+  const n = parseInt(band, 10);
+  if (isNaN(n)) return null;
+  return `${n}s`;
+}
+
 export const STATUS_LABELS = {
   APPROVED:      "Approved",
   READY_TO_PLAY: "Ready to play",
@@ -231,6 +251,7 @@ export const DEFAULT_SORT = 'title';
 // Each multi-select filter ↔ its URL param name. Order here sets param order.
 const FILTER_PARAMS = [
   ['difficulties', 'difficulty'],
+  ['decades',      'decade'],
   ['countries',    'country'],
   ['themes',       'theme'],
   ['genres',       'genre'],

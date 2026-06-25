@@ -21,6 +21,7 @@ import {
   splitTagsByThreshold,
   filtersToSearchParams,
   parseFiltersFromSearch,
+  shouldRevealOverflow,
 } from './utils.js';
 
 // ── slugify ────────────────────────────────────────────────────────────────
@@ -465,5 +466,27 @@ describe('parseFiltersFromSearch', () => {
     };
     const restored = parseFiltersFromSearch('?' + filtersToSearchParams(filters).toString());
     expect(restored).toEqual(filters);
+  });
+});
+
+// ── shouldRevealOverflow ────────────────────────────────────────────────────────
+
+describe('shouldRevealOverflow', () => {
+  it('reveals the tail only when a hidden-tail pill is switched on', () => {
+    expect(shouldRevealOverflow(true, true)).toBe(true);
+  });
+
+  it('does not reveal the tail for a top-level (visible) pill — the regression', () => {
+    expect(shouldRevealOverflow(true, false)).toBe(false);
+  });
+
+  it('never reveals the tail when deactivating a pill', () => {
+    expect(shouldRevealOverflow(false, true)).toBe(false);
+    expect(shouldRevealOverflow(false, false)).toBe(false);
+  });
+
+  it('coerces to a boolean', () => {
+    expect(shouldRevealOverflow(1, 1)).toBe(true);
+    expect(shouldRevealOverflow(0, 1)).toBe(false);
   });
 });

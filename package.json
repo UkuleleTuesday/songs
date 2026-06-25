@@ -4,6 +4,7 @@
   "description": "Ukulele Tuesday Song Explorer - browse and search song sheets",
   "devDependencies": {
     "astro": "^6.0.8",
+    "happy-dom": "^20.10.6",
     "vitest": "^4.1.1"
   },
   "scripts": {

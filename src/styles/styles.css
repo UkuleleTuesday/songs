@@ -454,6 +454,14 @@
     .chip-new { background: #ff6f00; color: #fff; font-weight: 600; cursor: default; }
     .chip-wip { background: #ede7f6; color: #4527a0; cursor: default; }
 
+    /* Clickable filter chips on cards — click to filter by that tag. */
+    .chip-clickable { cursor: pointer; transition: filter 0.12s ease, box-shadow 0.12s ease; }
+    .chip-clickable:hover { filter: brightness(0.94); }
+    .chip-clickable:focus-visible {
+      outline: 2px solid #4527a0;
+      outline-offset: 1px;
+    }
+
     /* ── No results ── */
     .no-results {
       grid-column: 1 / -1;

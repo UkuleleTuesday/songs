@@ -17,7 +17,10 @@ import {
   parseTheme,
   renderCountry,
   renderTheme,
+  renderGenre,
   splitTagsByThreshold,
+  filtersToSearchParams,
+  parseFiltersFromSearch,
 } from './utils.js';
 
 // ── slugify ────────────────────────────────────────────────────────────────
@@ -368,5 +371,99 @@ describe('splitTagsByThreshold', () => {
     const [shown, hidden] = splitTagsByThreshold(['usa', 'italy'], { usa: 119, italy: 8 }, 10);
     expect(shown).toEqual(['usa']);
     expect(hidden).toEqual(['italy']);
+  });
+});
+
+// ── clickable chips ───────────────────────────────────────────────────────────
+
+describe('clickable chips', () => {
+  it('renderCountry adds filter data attributes when clickable', () => {
+    const html = renderCountry('ireland', { clickable: true });
+    expect(html).toContain('chip-clickable');
+    expect(html).toContain('data-filter-type="country"');
+    expect(html).toContain('data-filter-value="ireland"');
+    expect(html).toContain('role="button"');
+  });
+
+  it('renderTheme adds filter data attributes when clickable', () => {
+    const html = renderTheme('halloween', { clickable: true });
+    expect(html).toContain('data-filter-type="theme"');
+    expect(html).toContain('data-filter-value="halloween"');
+  });
+
+  it('renderGenre renders the id and adds attributes when clickable', () => {
+    expect(renderGenre('pop')).toContain('chip-genre');
+    expect(renderGenre('pop')).toContain('pop');
+    const html = renderGenre('pop', { clickable: true });
+    expect(html).toContain('data-filter-type="genre"');
+    expect(html).toContain('data-filter-value="pop"');
+  });
+
+  it('omits the clickable affordances by default', () => {
+    const html = renderCountry('ireland');
+    expect(html).not.toContain('chip-clickable');
+    expect(html).not.toContain('data-filter-type');
+  });
+
+  it('escapes data-filter-value', () => {
+    const html = renderGenre('a"b', { clickable: true });
+    expect(html).toContain('data-filter-value="a&quot;b"');
+    expect(html).not.toContain('data-filter-value="a"b"');
+  });
+});
+
+// ── filter state ⇄ URL ──────────────────────────────────────────────────────────
+
+describe('filtersToSearchParams', () => {
+  it('serialises a query', () => {
+    expect(filtersToSearchParams({ query: 'perfect' }).toString()).toBe('q=perfect');
+  });
+
+  it('uses repeated params for multi-select filters', () => {
+    const qs = filtersToSearchParams({ genres: ['pop', 'rock'], countries: ['ireland'] }).toString();
+    expect(qs).toBe('country=ireland&genre=pop&genre=rock');
+  });
+
+  it('omits the default sort but keeps a non-default one', () => {
+    expect(filtersToSearchParams({ sort: 'title' }).toString()).toBe('');
+    expect(filtersToSearchParams({ sort: 'last-added' }).toString()).toBe('sort=last-added');
+  });
+
+  it('produces an empty string for empty filters', () => {
+    expect(filtersToSearchParams({}).toString()).toBe('');
+  });
+});
+
+describe('parseFiltersFromSearch', () => {
+  it('parses query, sort, and repeated multi-select params', () => {
+    const f = parseFiltersFromSearch('?q=love&difficulty=easy&country=ireland&genre=pop&genre=rock&sort=last-added');
+    expect(f).toEqual({
+      query: 'love',
+      sort: 'last-added',
+      difficulties: ['easy'],
+      countries: ['ireland'],
+      themes: [],
+      genres: ['pop', 'rock'],
+    });
+  });
+
+  it('defaults to empty arrays and title sort', () => {
+    const f = parseFiltersFromSearch('');
+    expect(f).toEqual({
+      query: '', sort: 'title', difficulties: [], countries: [], themes: [], genres: [],
+    });
+  });
+
+  it('round-trips through filtersToSearchParams', () => {
+    const filters = {
+      query: 'hey jude',
+      sort: 'last-added',
+      difficulties: ['easy', 'hard'],
+      countries: ['united states'],
+      themes: ['christmas'],
+      genres: ['pop'],
+    };
+    const restored = parseFiltersFromSearch('?' + filtersToSearchParams(filters).toString());
+    expect(restored).toEqual(filters);
   });
 });

@@ -160,14 +160,25 @@ export function parseTheme(props) {
   return ((props || {}).theme || '').split(',').map(t => t.trim()).filter(Boolean);
 }
 
-export function renderCountry(id) {
-  const c = getCountry(id);
-  return `<span class="chip chip-country" title="${escHtml(c.label)}">${escHtml(c.emoji)} ${escHtml(c.label)}</span>`;
+// When `clickable` is set, the chip carries the class + data attributes the
+// explorer uses to turn it into a filter toggle (see explorer.js). Elsewhere
+// (e.g. the individual song-sheet page) the chips stay inert.
+function filterChip(type, id, baseClass, label, body, clickable) {
+  const cls  = clickable ? `chip ${baseClass} chip-clickable` : `chip ${baseClass}`;
+  const data = clickable
+    ? ` data-filter-type="${escHtml(type)}" data-filter-value="${escHtml(id)}" role="button" tabindex="0"`
+    : '';
+  return `<span class="${cls}"${data} title="${escHtml(label)}">${body}</span>`;
 }
 
-export function renderTheme(id) {
+export function renderCountry(id, { clickable = false } = {}) {
+  const c = getCountry(id);
+  return filterChip('country', id, 'chip-country', c.label, `${escHtml(c.emoji)} ${escHtml(c.label)}`, clickable);
+}
+
+export function renderTheme(id, { clickable = false } = {}) {
   const t = getTheme(id);
-  return `<span class="chip chip-theme" title="${escHtml(t.label)}">${escHtml(t.emoji)} ${escHtml(t.label)}</span>`;
+  return filterChip('theme', id, 'chip-theme', t.label, `${escHtml(t.emoji)} ${escHtml(t.label)}`, clickable);
 }
 
 // ── Genres ───────────────────────────────────────────────────────────────────
@@ -180,9 +191,9 @@ export function parseGenres(props) {
     .filter(Boolean);
 }
 
-export function renderGenre(id, { iconOnly = false } = {}) {
-  void iconOnly; // genres have no emoji — always render as text
-  return `<span class="chip chip-genre">${escHtml(id)}</span>`;
+export function renderGenre(id, { clickable = false } = {}) {
+  // genres have no emoji — always render as text; label === id
+  return filterChip('genre', id, 'chip-genre', id, escHtml(id), clickable);
 }
 
 // ── Pill thresholds ───────────────────────────────────────────────────────────
@@ -199,4 +210,42 @@ export function splitTagsByThreshold(orderedIds, counts, min = TAG_PILL_MIN_COUN
   const shown = orderedIds.filter(id => countOf(id) > min);
   if (shown.length === 0) return [orderedIds.slice(), []];
   return [shown, orderedIds.filter(id => countOf(id) <= min)];
+}
+
+// ── Shareable filter state ⇄ URL ───────────────────────────────────────────────
+// The explorer's filter state serialises to query-string params so a filtered
+// view can be shared as a link (e.g. ?q=perfect&difficulty=easy&country=ireland).
+// Multi-select filters use repeated params (?genre=pop&genre=rock) so values
+// never collide with a separator. `sort` is omitted when it's the default.
+
+export const DEFAULT_SORT = 'title';
+
+// Each multi-select filter ↔ its URL param name. Order here sets param order.
+const FILTER_PARAMS = [
+  ['difficulties', 'difficulty'],
+  ['countries',    'country'],
+  ['themes',       'theme'],
+  ['genres',       'genre'],
+];
+
+export function filtersToSearchParams(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.query) params.set('q', filters.query);
+  for (const [key, param] of FILTER_PARAMS) {
+    for (const v of filters[key] || []) params.append(param, v);
+  }
+  if (filters.sort && filters.sort !== DEFAULT_SORT) params.set('sort', filters.sort);
+  return params;
+}
+
+export function parseFiltersFromSearch(search = '') {
+  const params = new URLSearchParams(search);
+  const out = {
+    query: params.get('q') || '',
+    sort:  params.get('sort') || DEFAULT_SORT,
+  };
+  for (const [key, param] of FILTER_PARAMS) {
+    out[key] = params.getAll(param);
+  }
+  return out;
 }
